@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "interrupt.h"
 #include "framebuffer.h"
+#include "pervasives.h"
 
 IDTEntry idtEntry(dword base,word sel,byte dpl,byte present) {
   IDTEntry ret = {
@@ -69,16 +70,16 @@ void otherIRQ();
 char* descriptions[32]; 
 
 void remapIRQs(void) {
-    outportb(0x20, 0x11);
-    outportb(0xA0, 0x11);
-    outportb(0x21, 0x20);
-    outportb(0xA1, 0x28);
-    outportb(0x21, 0x04);
-    outportb(0xA1, 0x02);
-    outportb(0x21, 0x01);
-    outportb(0xA1, 0x01);
-    outportb(0x21, 0x0);
-    outportb(0xA1, 0x0);
+  outportb(0x20, 0x11);
+  outportb(0xA0, 0x11);
+  outportb(0x21, 0x20);
+  outportb(0xA1, 0x28);
+  outportb(0x21, 0x04);
+  outportb(0xA1, 0x02);
+  outportb(0x21, 0x01);
+  outportb(0xA1, 0x01);
+  outportb(0x21, 0x0);
+  outportb(0xA1, 0x0);
 }
 
 void init_interrupts() {
@@ -102,86 +103,86 @@ void init_interrupts() {
   descriptions[17]="Alignment Check";
   descriptions[18]="Machine Check";
 
-  idts[0] = idtEntry((dword)isr0,KERNEL_SEGMENT,0,1);
-  idts[1] = idtEntry((dword)isr1,KERNEL_SEGMENT,0,1);
-  idts[2] = idtEntry((dword)isr2,KERNEL_SEGMENT,0,1);
-  idts[3] = idtEntry((dword)isr3,KERNEL_SEGMENT,0,1);
-  idts[4] = idtEntry((dword)isr4,KERNEL_SEGMENT,0,1);
-  idts[5] = idtEntry((dword)isr5,KERNEL_SEGMENT,0,1);
-  idts[6] = idtEntry((dword)isr6,KERNEL_SEGMENT,0,1);
-  idts[7] = idtEntry((dword)isr7,KERNEL_SEGMENT,0,1);
-  idts[8] = idtEntry((dword)isr8,KERNEL_SEGMENT,0,1);
-  idts[9] = idtEntry((dword)isr9,KERNEL_SEGMENT,0,1);
-  idts[10] = idtEntry((dword)isr10,KERNEL_SEGMENT,0,1);
-  idts[11] = idtEntry((dword)isr11,KERNEL_SEGMENT,0,1);
-  idts[12] = idtEntry((dword)isr12,KERNEL_SEGMENT,0,1);
-  idts[13] = idtEntry((dword)isr13,KERNEL_SEGMENT,0,1);
-  idts[14] = idtEntry((dword)isr14,KERNEL_SEGMENT,0,1);
-  idts[15] = idtEntry((dword)isr15,KERNEL_SEGMENT,0,1);
-  idts[16] = idtEntry((dword)isr16,KERNEL_SEGMENT,0,1);
-  idts[17] = idtEntry((dword)isr17,KERNEL_SEGMENT,0,1);
-  idts[18] = idtEntry((dword)isr18,KERNEL_SEGMENT,0,1);
+  idts[0] = idtEntry((dword)isr0,CODE_SEGMENT,0,1);
+  idts[1] = idtEntry((dword)isr1,CODE_SEGMENT,0,1);
+  idts[2] = idtEntry((dword)isr2,CODE_SEGMENT,0,1);
+  idts[3] = idtEntry((dword)isr3,CODE_SEGMENT,0,1);
+  idts[4] = idtEntry((dword)isr4,CODE_SEGMENT,0,1);
+  idts[5] = idtEntry((dword)isr5,CODE_SEGMENT,0,1);
+  idts[6] = idtEntry((dword)isr6,CODE_SEGMENT,0,1);
+  idts[7] = idtEntry((dword)isr7,CODE_SEGMENT,0,1);
+  idts[8] = idtEntry((dword)isr8,CODE_SEGMENT,0,1);
+  idts[9] = idtEntry((dword)isr9,CODE_SEGMENT,0,1);
+  idts[10] = idtEntry((dword)isr10,CODE_SEGMENT,0,1);
+  idts[11] = idtEntry((dword)isr11,CODE_SEGMENT,0,1);
+  idts[12] = idtEntry((dword)isr12,CODE_SEGMENT,0,1);
+  idts[13] = idtEntry((dword)isr13,CODE_SEGMENT,0,1);
+  idts[14] = idtEntry((dword)isr14,CODE_SEGMENT,0,1);
+  idts[15] = idtEntry((dword)isr15,CODE_SEGMENT,0,1);
+  idts[16] = idtEntry((dword)isr16,CODE_SEGMENT,0,1);
+  idts[17] = idtEntry((dword)isr17,CODE_SEGMENT,0,1);
+  idts[18] = idtEntry((dword)isr18,CODE_SEGMENT,0,1);
   
   int i;
   for(i=19;i<32;i++) {
-    idts[i] = idtEntry((dword)reservedISR,KERNEL_SEGMENT,0,1);
+    idts[i] = idtEntry((dword)reservedISR,CODE_SEGMENT,0,1);
     descriptions[i]="Reserved";
   }
   
-  idts[32] = idtEntry((dword)irq0,KERNEL_SEGMENT,0,1);
-  idts[33] = idtEntry((dword)irq1,KERNEL_SEGMENT,0,1);
-  idts[34] = idtEntry((dword)irq2,KERNEL_SEGMENT,0,1);
-  idts[35] = idtEntry((dword)irq3,KERNEL_SEGMENT,0,1);
-  idts[36] = idtEntry((dword)irq4,KERNEL_SEGMENT,0,1);
-  idts[37] = idtEntry((dword)irq5,KERNEL_SEGMENT,0,1);
-  idts[38] = idtEntry((dword)irq6,KERNEL_SEGMENT,0,1);
-  idts[39] = idtEntry((dword)irq7,KERNEL_SEGMENT,0,1);
-  idts[40] = idtEntry((dword)irq8,KERNEL_SEGMENT,0,1);
-  idts[41] = idtEntry((dword)irq9,KERNEL_SEGMENT,0,1);
-  idts[42] = idtEntry((dword)irq10,KERNEL_SEGMENT,0,1);
-  idts[43] = idtEntry((dword)irq11,KERNEL_SEGMENT,0,1);
-  idts[44] = idtEntry((dword)irq12,KERNEL_SEGMENT,0,1);
-  idts[45] = idtEntry((dword)irq13,KERNEL_SEGMENT,0,1);
-  idts[46] = idtEntry((dword)irq14,KERNEL_SEGMENT,0,1);
-  idts[47] = idtEntry((dword)irq15,KERNEL_SEGMENT,0,1);
+  idts[32] = idtEntry((dword)irq0,CODE_SEGMENT,0,1);
+  idts[33] = idtEntry((dword)irq1,CODE_SEGMENT,0,1);
+  idts[34] = idtEntry((dword)irq2,CODE_SEGMENT,0,1);
+  idts[35] = idtEntry((dword)irq3,CODE_SEGMENT,0,1);
+  idts[36] = idtEntry((dword)irq4,CODE_SEGMENT,0,1);
+  idts[37] = idtEntry((dword)irq5,CODE_SEGMENT,0,1);
+  idts[38] = idtEntry((dword)irq6,CODE_SEGMENT,0,1);
+  idts[39] = idtEntry((dword)irq7,CODE_SEGMENT,0,1);
+  idts[40] = idtEntry((dword)irq8,CODE_SEGMENT,0,1);
+  idts[41] = idtEntry((dword)irq9,CODE_SEGMENT,0,1);
+  idts[42] = idtEntry((dword)irq10,CODE_SEGMENT,0,1);
+  idts[43] = idtEntry((dword)irq11,CODE_SEGMENT,0,1);
+  idts[44] = idtEntry((dword)irq12,CODE_SEGMENT,0,1);
+  idts[45] = idtEntry((dword)irq13,CODE_SEGMENT,0,1);
+  idts[46] = idtEntry((dword)irq14,CODE_SEGMENT,0,1);
+  idts[47] = idtEntry((dword)irq15,CODE_SEGMENT,0,1);
   
   for(i=48;i<256;i++)
-    idts[i] = idtEntry((dword)otherIRQ,KERNEL_SEGMENT,0,1);
+    idts[i] = idtEntry((dword)otherIRQ,CODE_SEGMENT,0,1);
  
   idtp.limit = 48*sizeof(IDTEntry) - 1;
   idtp.idts = &idts;
 
   remapIRQs();
   loadInterrupts();
-  /* enableInterrupts(); */
+  enableInterrupts();
 }
 
-typedef struct {
-  dword gs, fs, es, ds;      /* pushed the segs last */
-  dword edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
-  dword int_no, err_code;    /* our 'push byte #' and ecodes do this */
-  dword eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
-} __attribute__((__packed__)) IDTParams;
+IDTHandler irqs[16] = { 0 };
 
 void handleISR(IDTParams* regs) {
   dword ex_num = regs->int_no;
 
-  /* if(ex_num < 32) { */
-  /*   printf("Caught Exception %d (%s) with error code %d\n",ex_num,descriptions[ex_num],regs->err_code); */
-  /*   printf("eax=%d, esp=%d, eip=%d",regs->eax,regs->useresp,regs->eip); */
-  /* } */
+  if(ex_num < 32) {
+    printf("Caught Exception %d (%s) with error code %d\n",ex_num,descriptions[ex_num],regs->err_code);
+    printf("eax=%d, esp=%d, eip=%d",regs->eax,regs->useresp,regs->eip);
+    while(1) {
+      nop();
+    }
+  }
   /* else { */
   /*   printf("Unhandled exception %d\n",ex_num); */
   /* } */
 }
 void handleIRQ(IDTParams* regs) {
   dword irqNum = regs->int_no;
-
-  /* if(irqNum < 16) { */
-  /*   printf("Interrupt %d.",irqNum); */
-  /* } */
+  
+  if(irqNum < 16) {
+    IDTHandler f = irqs[irqNum];
+    if(f != 0) 
+      f(regs);
+  }
   /* else { */
-  /*   printf("Unhandled interrupt."); */
+  /*   printf("Unhandled interrupt.\n"); */
   /* } */
 
   if(irqNum >= 8) {

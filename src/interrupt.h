@@ -15,8 +15,16 @@ typedef struct {
   IDTFlags flags;
   word base_hi;
 } __attribute((__packed__)) IDTEntry;
+typedef struct {
+  dword gs, fs, es, ds;      /* pushed the segs last */
+  dword edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
+  dword int_no, err_code;    /* our 'push byte #' and ecodes do this */
+  dword eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
+} __attribute__((__packed__)) IDTParams;
+typedef void(*IDTHandler)(IDTParams*);
 
 void enableInterrupts();
 void disableInterrupts();
+extern IDTHandler irqs[16];
 
 #endif

@@ -1,13 +1,7 @@
-%include "constants.s"
+%include "constants.S"
 
-extern idtp
-extern handleISR
-extern handleIRQ
-global enableInterrupts
-global disableInterrupts
-global loadInterrupts
-global reservedISR
-global otherIRQ
+extern idtp,handleISR,handleIRQ
+global enableInterrupts,disableInterrupts,loadInterrupts,reservedISR,otherIRQ
 	
 enableInterrupts:
 	sti

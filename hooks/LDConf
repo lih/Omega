@@ -1,6 +1,11 @@
+#!/bin/bash
+src="$1"
+entry="$(sed -rn 's/#define\s+KERNEL\s+//p' "$src")"
+
+cat <<EOF
 OUTPUT_FORMAT("binary")
 ENTRY(kmain)
-phys = 0x00001200;
+phys = $entry;
 SECTIONS
 {
   .text phys : AT(phys) {
@@ -23,3 +28,4 @@ SECTIONS
   }
   end = .;
 }
+EOF

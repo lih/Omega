@@ -1,0 +1,6 @@
+#!/bin/bash
+obj="$1" ; shift ; src="$1"
+
+mkdir -p "$(dirname "$obj")"
+
+gcc -m32 -w -c "$src" -o "$obj"

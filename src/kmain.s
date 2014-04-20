@@ -1,4 +1,4 @@
-%include "constants.s"
+%include "constants.S"
 
 section .text
 global kmain
@@ -58,20 +58,21 @@ end_entry:
 	or eax,1
 	mov cr0,eax
 
-	jmp 08h:protected_mode
+	jmp CODE_SEGMENT:protected_mode
 
 [BITS 32]
 protected_mode:
-	mov ax, 10h
+	mov ax, DATA_SEGMENT
 	mov ds, ax
 	mov ss, ax
 	mov fs, ax
 	mov gs, ax
 	mov es, ax
-	mov esp, 0x90000
+	mov esp, KERNEL_STACK
 	
         call main
-
+	jmp $
+	
 	ALIGN 8
 gdt:
 	dq 0

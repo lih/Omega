@@ -1,4 +1,4 @@
-%include "constants.s"
+%include "constants.S"
 [BITS 16]
 
 [ORG 0x7C00]

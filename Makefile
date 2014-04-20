@@ -7,7 +7,7 @@ clean:
 	@rm bin/*
 
 run: all exec/disk
-	cd exec && bochs/bochs -q
+	cd exec && ./bochs -q
 
 exec/disk: bin/bootsector.bin bin/kernel.bin
 	@echo Creating disk image...

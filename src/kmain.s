@@ -4,8 +4,6 @@ section .text
 global kmain
 extern main
 
-	jmp kmain
-	
 kmain:
 
 [BITS 16]
@@ -29,6 +27,28 @@ reset_drive:
 	or ah, ah
 	jnz reset_drive
 
+	;; Load the memory map
+	mov ebp,0
+	xor ebx,ebx
+	xor ax,ax
+	mov es,ax
+	mov di, MEM_MAP
+	mov edx,SMAP_MAGIC
+	
+get_entry:	
+	mov eax,0e820h
+	mov ecx,24
+	int 15h
+	jc end_entry
+	cmp ebx,0
+	je end_entry
+	add di,24
+	inc ebp
+	jmp get_entry
+end_entry:	
+	
+	mov [MEM_MAP_SIZE],ebp
+	
 	cli
 	xor ax,ax
 	mov ds,ax

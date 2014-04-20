@@ -1,10 +1,1 @@
-megs: 32
-romimage: file=bochs/bios/BIOS-bochs-latest
-vgaromimage: file=bochs/bios/VGABIOS-elpin-2.40
-ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=disk, mode=flat, translation=auto, path="disk", cylinders=8, heads=1, spt=16, biosdetect=auto, model="HDrive"
-boot: disk
-log: bochsout.txt
-mouse: enabled=0
-
-# display_library: x, options="gui_debug"
+current/bochsrc

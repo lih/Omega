@@ -1,8 +1,0 @@
-#!/bin/bash
-out="$1" ; shift
-bootsect="$1"
-kernel="$2"
-
-mkdir -p "$(dirname "$out")"
-
-cat "$bootsect" "$kernel" /dev/zero | dd if='/dev/stdin' of="$out" bs=512 count=128 2> /dev/null

@@ -1,5 +1,8 @@
 all: 
-	@cook
+	@cook -l build-log
 
 run: all
-	cd exec && ./bochs -q
+	cd dist && ./bochs -q
+
+clean:
+	cook clean

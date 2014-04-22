@@ -1,11 +1,1 @@
-Current mainstream operating systems (Windows,Linux,BSD,...) have
-become very heavy and complex with time, and are getting heavier and
-more complex with every new release. Programs are following the same
-trend, so much so that a computer from ten years ago cannot even run
-them properly, even those that existed ten years ago.
-
-Omega is my personal attempt at finding out why. I figure, by writing
-an operating system I might really understand what programs do today
-that they didn't yesterday and why.
-
-Omega is 
+/home/murray/home/projs/Omega/README

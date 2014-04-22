@@ -1,2 +1,0 @@
-#!/bin/bash
-sed -rn 's/^#define/%define/p' "$1"

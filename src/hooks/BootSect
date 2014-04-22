@@ -1,6 +1,0 @@
-#!/bin/bash
-out="$1" ; shift ; src="$1"
-
-mkdir -p "$(dirname "$out")"
-
-nasm -i "$SRC/" -i "$BUILD/" "$src" -o "$out"

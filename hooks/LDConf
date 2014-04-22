@@ -1,0 +1,31 @@
+#!/bin/bash
+src="$1"
+entry="$(sed -rn 's/#define\s+KERNEL\s+//p' "$src")"
+
+cat <<EOF
+OUTPUT_FORMAT("binary")
+ENTRY(kmain)
+phys = $entry;
+SECTIONS
+{
+  .text phys : AT(phys) {
+    code = .;
+    *(.text)
+    *(.rodata)
+    . = ALIGN(4096);
+  }
+  .data : AT(phys + (data - code))
+  {
+    data = .;
+    *(.data)
+    . = ALIGN(4096);
+  }
+  .bss : AT(phys + (bss - code))
+  {
+    bss = .;
+    *(.bss)
+    . = ALIGN(4096);
+  }
+  end = .;
+}
+EOF

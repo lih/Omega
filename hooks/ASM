@@ -1,0 +1,6 @@
+#!/bin/bash
+obj="$1" ; shift ; src="$1"
+
+mkdir -p "$(dirname "$obj")"
+
+nasm -i "$BUILD/" -i "$SRC/" -f elf32 "$src" -o "$obj"

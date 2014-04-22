@@ -1,0 +1,43 @@
+set silent;
+
+search_list = cook;
+parallel_jobs = 100;
+
+HOOKS = hooks;
+BUILD = .build;
+BIN = [BUILD]/bin;
+SRC = src;
+DIST = dist;
+
+setenv SRC = [SRC];
+setenv BUILD = [BUILD];
+
+#include [resolve hooks.cook]
+
+sources = [SRC]/kmain.s [collect ls [SRC]/'*'.s [SRC]/'*'.c];
+headers = [collect ls [SRC]/'*'.h];
+
+all: [DIST]/Omega.img {
+     echo All done !;
+}
+clean: {
+       rm -rf [BUILD] [DIST]/Omega.img;
+}
+
+[BUILD]/constants.S: [HOOKS]/ASMConstants [SRC]/constants.h(weak)
+{ function hook; }
+[BUILD]/ld.conf: [HOOKS]/LDConf [SRC]/constants.h(weak)
+{ function hook; }
+
+[BIN]/%0%.s.o: [HOOKS]/ASM [SRC]/%0%.s(weak) [BUILD]/constants.S(weak)
+{ function rawhook; }
+[BIN]/%0%.c.o: [HOOKS]/CC [SRC]/%0%.c(weak) [fromto %0% %0%(weak) [headers]]
+{ function rawhook; }
+
+[BIN]/kernel.bin: [HOOKS]/LD [BUILD]/ld.conf(weak) [fromto [SRC]/%0% [BIN]/%0%.o(weak) [sources]]
+{ function rawhook; }
+[BIN]/bootsector.bin: [HOOKS]/BootSect [SRC]/bootsector.S(weak) [BUILD]/constants.S(weak)
+{ function rawhook; }
+
+[DIST]/Omega.img: [HOOKS]/Disk [BIN]/bootsector.bin(weak) [BIN]/kernel.bin(weak) 
+{ function rawhook; }

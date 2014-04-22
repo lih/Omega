@@ -1,0 +1,8 @@
+#!/bin/bash
+out="$1" ; shift
+script="$1"
+shift
+
+mkdir -p "$(dirname "$out")"
+
+ld -T "$script" -m elf_i386 -o "$out"  "$@"

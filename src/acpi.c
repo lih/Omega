@@ -12,16 +12,15 @@ SDTable* findSDTable(char*);
 void initACPI() {
   rsdp = findRSDP();
   fadt = (FADT*) findSDTable("FACP");
-  outportb(fadt->smiCommandPort,fadt->acpiEnable);
+  
+  if(fadt->smiCommandPort != 0
+     && (fadt->acpiEnable == 0 || fadt->acpiDisable)) {
+    /* Enable ACPI if it wasn't already initialized by the system */
+    outportb(fadt->smiCommandPort,fadt->acpiEnable);
+  }
 }
 void shutdown() {
-  printf("ACPI shutdown...");
-  
-  /* FIXME: waiting loop to actually see the above message */
-  int i;
-  for(i=0;i<10000000;i++);
-
-  /* FIXME: Magic values recognized by Bochs. */
+  /* FIXME: Magic values only recognized by Bochs. */
   outportw(0xb004,0x2000);
 }
 RSDP* findRSDP() {

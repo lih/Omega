@@ -24,6 +24,7 @@ typedef struct {
 typedef void(*IDTHandler)(IDTParams*);
 
 extern IDTHandler irqs[16];
+extern IDTHandler syscalls[207];
 
 void initInterrupts();
 

@@ -19,7 +19,7 @@ reset_drive:
 	mov bx, KERNEL+512
 
 	mov ah, 02h
-	mov al, 30h
+	mov al, 40h
 	mov ch, 0
 	mov cl, 03h
 	mov dh, 0

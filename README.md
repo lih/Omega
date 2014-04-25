@@ -36,14 +36,14 @@ machines (aka. programs) that possess their own virtual environment in
 which to execute without disturbing neighbouring programs.
 
 Simply efficient
-================
+----------------
 
 Since its purpose is so focused, the Omega kernel itself can afford to
-be quite small (less than 20k at the time of writing), and extremely
-efficient since there are no complex data structures to initialize and
-maintain or devices to wait upon. It can boot instantly on almost any
-(compatible, x86) computer and be up and running in less time than it took
-you to read this sentence.
+be quite small (less than 20k at the time of writing this), and
+extremely efficient since there are no complex data structures to
+initialize and maintain or devices to wait upon. It can boot instantly
+on almost any (compatible, x86) computer and be up and running in less
+time than it took you to read this sentence.
 
 Other components can be loaded and set up just as fast, and I can't
 imagine there being more than a few dozens of those : one for
@@ -53,30 +53,31 @@ monitor user programs. Counting large, that leaves us with less than
 thirty additional modules to be loaded before the operating system may
 be used fully. By my calculations, if each module takes as long as the
 kernel to load and initialize (~10ms), a fully-functional system is a
-few milliseconds away from pushing a button, which is fast enough for
-my own use.
+few milliseconds away from pushing a button, which I deem *fast enough*(tm)
 
 Compiling and running Omega
 ===========================
 
-Compiling Omega is dead simple, just run `cook` from the root of the
-source directory and grab the boot image `dist/Omega.img` that was
-generated.
+Omega is written in C and assembly, so very little is actually needed
+to compile it. I use `gcc` and `nasm`, which work just fine. I use
+`cook` as my build tool, but it should be simple enough to write a
+Makefile with the same functionality (actually, `cook` can do that for
+you).
+
+Once all the tools are installed, compiling Omega is dead simple, just
+run `cook` from the root of the source directory and grab the boot
+image `dist/Omega.img` that was generated.
 
 I run my own tests with Bochs, an open-source emulator, so Omega is
 guaranteed to work on that. Technically, it should work on any
 x86-capable machine, since it was developped from the Intel
-specification, but I haven't tested it on real hardware yet.
+specification, but I haven't tested it on real hardware yet (I like to
+think inside the Bochs ;-) )
 
-Running Omega in Bochs is really easy too : just tell bochs to treat
-Omega.img as a primary drive and boot from that drive. A configuration
+Running Omega in Bochs is really easy too : just tell Bochs to treat
+`Omega.img` as a primary drive and boot from that drive. A configuration
 file is provided in `bochs/bochsrc` as an example, although you may need
 to adjust the paths to get it working.
-
-Omega is open-source software provided under the Free Beer Public
-License, which makes it available free of charge as well as of
-spirit. You may thus use or modify it in part or in full to fit your
-needs, as long as you also make your work free of charge.
 
 Remaining work
 ==============
@@ -85,6 +86,11 @@ Omega is not still finished yet, as some features announced above
 have not yet been implemented. They will be in the coming times, but for
 now they are listed here : 
 
-  * Scheduling tasks (I still have to figure out this TSS thing)
-  * syscalls
+  * Scheduling tasks of lesser privilege levels (it should work in theory but is not yet tested)
+  * Syscalls interrupts to let programs query the kernel
+  * Synchronization primitives, since this will be a multithreaded kernel
+  * Perhaps a small filesystem driver to bootstrap the first few universes
+  * Perhaps even a small TFTP and NIC driver for booting over PXE
+
+...aaand we'll be done ! All other work shall be 
 

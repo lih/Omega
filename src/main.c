@@ -32,6 +32,8 @@ void handleKey(IDTParams* _) {
 void main () {
   clearFB();
   printf("Initializing Omega: \n");
+  printf("  - Kernel size: %d sectors\n",ksize>>9);
+
   initACPI();
   printf("  - Enabled ACPI\n");
   initMemory();
@@ -44,8 +46,7 @@ void main () {
   printf("  - Initialized universe\n");
   initSchedule();
   printf("  - Initialized scheduling\n");
-  irqs[0] = timerIRQ;
-  setTimerPhase(118);
+  setTimerFreq(118);
   printf("  - Initialized timer with phase %d\n",timerPhase);
 
   running = 1;

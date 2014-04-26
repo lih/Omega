@@ -36,8 +36,10 @@ Descriptor tssDesc(TSS* tss,byte dpl);
 TSS        tss(Dir*,word,dword,word,dword,word,dword);
 
 void initSchedule();
+void yield();
+RR* spawn(dword eip);
+void die();
 
-void setTimerPhase(int hz);
-void timerIRQ(IDTParams* _);
+void setTimerFreq(int hz);
 
 #endif

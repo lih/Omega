@@ -1,8 +1,8 @@
 %include "constants.S"
 
 section .text
-global kmain,gdtDesc
-extern main
+global kmain,gdtDesc,ksize
+extern main,kernel_end
 
 kmain:
 
@@ -18,8 +18,10 @@ reset_drive:
 	mov es, ax
 	mov bx, KERNEL+512
 
+	mov eax, [ksize]
+	shr eax, 9
+	sub eax, 1
 	mov ah, 02h
-	mov al, 40h
 	mov ch, 0
 	mov cl, 03h
 	mov dh, 0
@@ -34,7 +36,7 @@ reset_drive:
 	mov es,ax
 	mov di, MEM_MAP
 	mov edx,SMAP_MAGIC
-	
+
 get_entry:	
 	mov eax,0e820h
 	mov ecx,24
@@ -72,8 +74,11 @@ protected_mode:
 	
         call main
 	jmp $
-	
+
 	ALIGN 8
+ksize:
+	dd kernel_end-KERNEL+0x1ff
+	
 	dw 0
 gdtDesc:
 	dw gdt_end-gdt

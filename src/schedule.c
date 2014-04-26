@@ -23,6 +23,8 @@ byte stackSlots[MAX_THREADS] = { 0 };
 int  curSlot = 0;
 word rootGate,slaveGate;
 
+void timerIRQ(IDTParams*);
+
 Descriptor tssDesc(TSS* data,byte dpl) {
   dword base = data;
 
@@ -57,6 +59,7 @@ TSS        tss(Dir* pageDir,word ss0,dword esp0,
 
   return ret;
 }
+TSS* getTSS();
 
 void initSchedule() {
   tssPool = pool(sizeof(TSS));
@@ -74,6 +77,8 @@ void initSchedule() {
   slaveGate = addDescriptor(tssDesc(rootTSS,0));
 
   setTaskRegister(slaveGate);
+
+  irqs[0] = timerIRQ;
 }
 
 int findNextSlot() {
@@ -86,34 +91,61 @@ int findNextSlot() {
 
   return curSlot;
 }
-RR* spark(Universe* univ,dword eip) {
+void yield() {
+  TSS* tss = getTSS();
+
+  RR* rr = tss->rr;
+  
+  /* detach current timeline */
+  rr->prev->next = rr->next;
+  rr->next->prev = rr->prev;
+
+  /* reattach it last on the round robin */
+  rr->next = &rr_root;
+  rr->prev = rr_root.prev;
+  rr_root.prev = rr;
+  
+  RR* curRR = rr_root.next;
+
+  tss->previousTask = slaveGate;
+  gdtDesc.base[slaveGate / sizeof(Descriptor)] = tssDesc(curRR->tss,curRR->univ->dpl);
+  flushGDT();
+}
+RR* spawn(dword eip) {
+  TSS* curtss = getTSS();
+  Universe* univ = curtss->rr->univ;
   int slot = findNextSlot();
   dword vaddr = STACK_START(slot);
-
-  int i;
-  for(i=0;i<STACK_PAGES;i++) {
-    void* pg = allocatePage();
-    mapPage(univ,vaddr+i*PAGE_SIZE,pg);
+    
+  if(univ != &kernelSpace) {
+    int i;
+    for(i=0;i<STACK_PAGES;i++) {
+      void* pg = allocatePage();
+      mapPage(univ,vaddr+i*PAGE_SIZE,pg);
+    }
   }
 
   TSS* s = poolAlloc(&tssPool);
 
-  *s = tss(univ->pageDir,DATA_SEGMENT,vaddr+STACK_SIZE,0,0,0,0);
+  *s = *curtss;
   s->eip = eip;
-  
-  RR* rr = poolAlloc(&rrPool);
+  s->esp = vaddr;
 
+  RR* rr = poolAlloc(&rrPool);
+    
   rr->next = rr_root.next;
   rr_root.next = rr;
   rr->prev = &rr_root;
   rr->tss = s;
   rr->slot = slot;
-
+  
   s->rr = rr;
   
   return rr;
 }
-void snuff(RR* rr) {
+void die() {
+  RR* rr = getTSS()->rr;
+
   rr->next->prev = rr->prev;
   rr->prev->next = rr->next;
 
@@ -138,24 +170,9 @@ void timerIRQ(IDTParams* _) {
     seconds++;
     /* printf("Second %d\n",seconds); */
   }
-  TSS* tss = getTSS();
-
-  RR* rr = tss->rr;
-  
-  /* detach current timeline */
-  rr->prev->next = rr->next;
-  rr->next->prev = rr->prev;
-
-  /* reattach it last on the round robin */
-  rr->next = &rr_root;
-  rr->prev = rr_root.prev;
-  rr_root.prev = rr;
-  
-  tss->previousTask = slaveGate;
-  gdtDesc.base[slaveGate / sizeof(Descriptor)] = tssDesc(rr_root.next->tss,rr_root.next->univ->dpl);
-  flushGDT();
+  yield();
 }
-void setTimerPhase(int hz) {
+void setTimerFreq(int hz) {
   timerPhase = FREQUENCY / hz;       
   outportb(0x43, 0x36);           /* Set our command byte 0x36 */
   outportb(0x40, timerPhase & 0xff);

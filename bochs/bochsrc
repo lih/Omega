@@ -1,9 +1,7 @@
 megs: 32
 clock: sync=realtime
-romimage: file=build/bios/BIOS-bochs-latest
-vgaromimage: file=build/bios/VGABIOS-elpin-2.40
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=disk, mode=flat, translation=auto, path="Omega.img", cylinders=8, heads=1, spt=16, biosdetect=auto, model="HDrive"
+ata0-master: type=disk, mode=flat, translation=auto, path="../dist/Omega.img", cylinders=8, heads=1, spt=16, biosdetect=auto, model="HDrive"
 boot: disk
 log: bochsout.txt
 mouse: enabled=0

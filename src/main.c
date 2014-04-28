@@ -17,17 +17,13 @@ void main () {
   charMode = 0x0c;
   printf("Initializing Omega: \n");
 
-  printf("taskRegister: %x\n",setTaskRegister);
-
   charMode = 0x02;
-  initFeature();
   printf("Loaded kernel of size %dB (%d sectors)\n",KERNEL_SIZE,(KERNEL_SIZE+0x1ff)>>9);
-  require(ACPI);
-  require(UNIVERSE);  
-  require(SCHEDULE);
-  require(INTERRUPTS);
-  require(KEYBOARD);
-  require(SYSCALLS);
+  require(&_acpi_);
+  require(&_universe_);  
+  require(&_schedule_);
+  require(&_keyboard_);
+  require(&_syscalls_);
   setCursor();
 
   charMode = 0x0b;

@@ -14,11 +14,12 @@ typedef union page {
 } page;
 
 #define NULL 0
+#define PACKED __attribute__((packed))
 #define IS(a,b) ((a)==(b))
 #define SET_STRUCT(t,v,...) { t __tmp__ = __VA_ARGS__; v = __tmp__; }
 #define AS(t,e) (*(t*)(&(e)))
 
-extern Feature feature_memory;
+extern Feature _memory_;
 extern int page_count;
 
 void* allocatePage();

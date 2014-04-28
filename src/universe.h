@@ -1,23 +1,21 @@
 #ifndef INCLUDED_UNIVERSE
 #define INCLUDED_UNIVERSE
 
-typedef dword DirEntry;
-#define DIR_SIZE (PAGE_SIZE/sizeof(DirEntry))
-typedef dword Dir[DIR_SIZE];
+#include "descriptors.h"
+#include "feature.h"
 
 typedef struct {
   Dir* pageDir;
   int dpl;
 } Universe;
 
+extern Feature _universe_;
+
 extern Universe kernelSpace;
 extern Universe rootSpace;
 
 Universe* newUniverse();
-
-void initUniverse();
-void mapPage(Universe* univ,dword vpage,void* page);
-
+void      mapPage(Universe* univ,dword vpage,void* page);
 DirEntry* dirVal(Dir*,dword);
 
 #endif

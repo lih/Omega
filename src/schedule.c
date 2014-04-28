@@ -13,7 +13,7 @@
 #define STACK_PAGE(s,i) (s-(i+1)*PAGE_SIZE)
 #define FREQUENCY 1193180
 
-Pool tssPool;
+Pool taskPool;
 Pool rrPool;
 
 RR rr_root;
@@ -23,33 +23,34 @@ int timerPhase;
 
 byte stackSlots[MAX_THREADS] = { 0 };
 int  curSlot = 0;
-word rootGate,slaveGate;
+Selector rootGate,slaveGate;
+
 Universe rootSpace;
 
 void schedule();
 void yield();
-static void spawn(TSS*);
-static void die(TSS*);
-static void warp(TSS*);
+static void spawn(Task*);
+static void die(Task*);
+static void warp(Task*);
 
 void init() {
   printf("Text from another process !\n");
   syscall_die();
 }
-void initSchedule() {
-  require(MEMORY);
-  require(UNIVERSE);
-  require(INTERRUPTS);
+static void initSchedule() {
+  require(&_memory_);
+  require(&_universe_);
+  require(&_interrupts_);
 
-  tssPool = pool(sizeof(TSS));
+  taskPool = pool(sizeof(Task));
   rrPool = pool(sizeof(RR));
 
-  TSS* rootTSS = poolAlloc(&tssPool);
+  Task* rootTask = poolAlloc(&taskPool);
   
   rr_root.next = &rr_root;
   rr_root.prev = &rr_root;
   rr_root.univ = &rootSpace;
-  rr_root.tss = rootTSS;
+  rr_root.task = rootTask;
 
   SET_STRUCT(Universe,rootSpace,{
       .pageDir = newDir(),
@@ -61,21 +62,25 @@ void initSchedule() {
   void* kpage = KERNEL_START & 0xfffff000;
   for(;kpage < KERNEL_START+KERNEL_SIZE;kpage+=PAGE_SIZE)
     mapPage(&rootSpace,kpage,kpage);
+  for(kpage = FB_MEM & 0xfffff000;kpage < FB_END;kpage+=PAGE_SIZE)
+    mapPage(&rootSpace,kpage,kpage);
+
   
-  *rootTSS = tss(rootSpace.pageDir,0,0,0,0,0,0);
-  rootTSS->rr = &rr_root;
+  rootTask->tss = tss(rootSpace.pageDir,0,0,0,0,0,0);
+  rootTask->rr = &rr_root;
 
-  TSS* mgmtTSS = poolAlloc(&tssPool);
+  Task* mgmtTask = poolAlloc(&taskPool);
 
-  *mgmtTSS = tss(kernelSpace.pageDir,DATA_SEGMENT,INT_STACK,0,0,0,0);
-  mgmtTSS->eip = schedule;
-  mgmtTSS->esp = INT_STACK;
-  mgmtTSS->ss = DATA_SEGMENT;
+  mgmtTask->tss = tss(kernelSpace.pageDir,DATA_SEGMENT,INT_STACK,0,0,0,0);
+  mgmtTask->tss.eip	= schedule;
+  mgmtTask->tss.esp	= INT_STACK;
+  mgmtTask->tss.ss	= DATA_SEGMENT;
 
-  rootGate = addDescriptor(tssDesc(mgmtTSS,0));
-  slaveGate = addDescriptor(tssDesc(rootTSS,0));
+  rootGate = addDesc(&gdt,tssDesc(mgmtTask,0,1));
+  slaveGate = addDesc(&gdt,tssDesc(rootTask,0,0));
+  flushGDT();
 
-  idts[32] = tssGate(rootGate,0);
+  idts[32] = taskGate(rootGate,0);
   syscalls[SYS_WARP] = warp;
   syscalls[SYS_SPAWN] = spawn;
   syscalls[SYS_DIE] = die;
@@ -83,13 +88,20 @@ void initSchedule() {
   setTimerFreq(TIMER_FREQ);
   padLine(); printf("Set timer frequency to %dHz\n",TIMER_FREQ);
   
+  setPageDirectory(rootSpace.pageDir);
+  printf("Changed universe.\n");
   setTaskRegister(slaveGate);
 }
+Feature _schedule_ = {
+  .state = DISABLED,
+  .label = "schedule",
+  .initialize = &initSchedule
+};
 
 void yield() {
-  int taskInd = getTSS()->previousTask / sizeof(Descriptor);
-  TSS* tss = descBase(gdtDesc.base[taskInd]);
-  RR* rr = tss->rr;
+  Descriptor* taskD = &DESCRIPTOR_AT(gdt,getTask()->tss.previousTask);
+  Task* task = descBase(*taskD);
+  RR* rr = task->rr;
 
   if(rr != &rr_root) {
     /* detach current timeline */
@@ -105,11 +117,11 @@ void yield() {
 
   RR* curRR = rr_root.next;
 
-  printf("Yield %x to %x (eip %x, ss %x, esp %x, cr3 %x)\n",rr->tss,curRR->tss,
-	 curRR->tss->eip,curRR->tss->ss,curRR->tss->esp,curRR->tss->cr3);
+  printf("Yield %x to %x (eip %x, ss %x, esp %x, cr3 %x)\n",rr->task,curRR->task,
+	 curRR->task->tss.eip,curRR->task->tss.ss,curRR->task->tss.esp,
+	 curRR->task->tss.cr3);
 
-  gdtDesc.base[taskInd] = tssDesc(curRR->tss,curRR->univ->dpl);
-  gdtDesc.base[taskInd].type |= 2;
+  *taskD = tssDesc(curRR->task,curRR->univ->dpl,1);
   flushGDT();
 
   int i; for(i=0;i<10000000;i++);
@@ -135,46 +147,11 @@ void setTimerFreq(int hz) {
   outportb(0x40, timerPhase >> 8); /* Set two-byte phase */
 }
 
-Descriptor tssDesc(TSS* data,byte dpl) {
-  dword base = data;
-
-  Descriptor ret = {
-    .limit_lo = sizeof(TSS),
-    .base_lo = base,
-    .base_mi = base >> 16,
-    .type = 9,
-    .codeOrData = 0,
-    .dpl = dpl,
-    .present = 1,
-    .limit_hi = 0,
-    .code64 = 0,
-    .opsize = 1,
-    .granularity = 1,
-    .base_hi = base >> 24
-  };
-
-  return ret;
+Task* newTask() {
+  return poolAlloc(&taskPool);
 }
-TSS        tss(Dir* pageDir,word ss0,dword esp0,
-	       word ss1,dword esp1,word ss2,dword esp2) {
-  TSS ret = {
-    .esp0 = esp0, .ss0 = ss0,
-    .esp1 = esp1, .ss1 = ss1,
-    .esp2 = esp2, .ss2 = ss2,
-    .cs = CODE_SEGMENT, .ds = DATA_SEGMENT, .es = DATA_SEGMENT,
-    .fs = DATA_SEGMENT, .gs = DATA_SEGMENT, .ss = DATA_SEGMENT,
-    .cr3 = (dword)pageDir,
-    .trap = 0
-  };
-
-  return ret;
-}
-TSS* newTSS() {
-  return poolAlloc(&tssPool);
-}
-TSS* getTSS() {
-  word tr = getTaskRegister();
-  return descBase(gdtDesc.base[tr / sizeof(Descriptor)]);
+Task* getTask() {
+  return descBase(DESCRIPTOR_AT(gdt,getTaskRegister()));
 }
 
 int findNextSlot() {
@@ -191,14 +168,13 @@ int findNextSlot() {
   Spawns a new timeline on the current universe
   where eip = eax.
  */
-void spawn(TSS* tss) {
-  dword eip = tss->ebx;
+void spawn(Task* task) {
+  dword eip = task->tss.ebx;
 
-  Universe* univ = tss->rr->univ;
+  Universe* univ = task->rr->univ;
   int slot = findNextSlot();
   dword vaddr = STACK_START(slot);
     
-
   if(univ != &kernelSpace) {
     int i;
     for(i=0;i<STACK_PAGES;i++) {
@@ -207,31 +183,29 @@ void spawn(TSS* tss) {
     }
   }
 
-  TSS* s = poolAlloc(&tssPool);
-
-  *s = *tss;
-  s->eip = eip;
-  s->esp = vaddr;
-
-  printf("Spawning : tss=%x new=%x\n",tss,s);
-  
+  Task* s = poolAlloc(&taskPool);
   RR* rr = poolAlloc(&rrPool);
-    
+
+  s->tss = task->tss;
+  s->tss.eip = eip;
+  s->tss.esp = vaddr;
+  s->rr = rr;
+
   rr->next = rr_root.next;
   rr_root.next = rr;
   rr->prev = &rr_root;
-  rr->tss = s;
+  rr->task = s;
   rr->slot = slot;
+
+  printf("Spawning : tss=%x new=%x\n",task,s);
   
-  s->rr = rr;
-  
-  tss->eax = rr;
+  task->tss.eax = rr;
 }
 /*
   Ends the current timeline.
  */
-void die(TSS* tss) {
-  RR* rr = tss->rr;
+void die(Task* task) {
+  RR* rr = task->rr;
 
   rr->next->prev = rr->prev;
   rr->prev->next = rr->next;
@@ -242,7 +216,7 @@ void die(TSS* tss) {
 
   stackSlots[rr->slot] = 0;
 
-  poolFree(&tssPool,rr->tss);
+  poolFree(&taskPool,rr->task);
   poolFree(&rrPool,rr);
 }
 /*
@@ -250,11 +224,11 @@ void die(TSS* tss) {
   where universe descriptor = eax
     and eip = ebx
  */
-void warp(TSS* tss) {
-  Universe* u = tss->ebx;
-  dword eip = tss->ecx;
+void warp(Task* task) {
+  Universe* u = task->tss.ebx;
+  dword eip = task->tss.ecx;
 
-  RR* rr = tss->rr;
+  RR* rr = task->rr;
   dword start = STACK_START(rr->slot);
 
   int i;
@@ -265,9 +239,8 @@ void warp(TSS* tss) {
     mapPage(rr->univ,vaddr,0);
   }
 
-  tss->eip = eip;
-  tss->esp = start;
-  tss->cr3 = u->pageDir;
-  
+  task->tss.eip = eip;
+  task->tss.esp = start;
+  task->tss.cr3 = u->pageDir;
 }
 

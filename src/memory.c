@@ -1,5 +1,6 @@
 #include "constants.h"
 #include "memory.h"
+#include "framebuffer.h"
 
 page* page_head;
 int page_count;
@@ -29,7 +30,7 @@ typedef struct {
   dword attributes;
 } MMapEntry;
 
-void initMemory() {
+static void initialize() {
   MMapEntry* entries = (void*)MEM_MAP;
   dword size = *(dword*)MEM_MAP_SIZE;
   int i;
@@ -53,6 +54,11 @@ void initMemory() {
   padLine();
   printf("Detected %d bytes of memory spread across %d pages\n",page_count*PAGE_SIZE,page_count);
 }
+Feature _memory_ = {
+  .state = DISABLED,
+  .label = "memory",
+  .initialize = &initialize
+};
 
 Pool pool(int blocksize) {
   Pool ret = {

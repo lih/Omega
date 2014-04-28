@@ -7,7 +7,7 @@ FADT* fadt;
 RSDP*    findRSDP();
 SDTable* findSDTable(char*);
 
-void initACPI() {
+static void initACPI() {
   rsdp = findRSDP();
   fadt = (FADT*) findSDTable("FACP");
   
@@ -17,6 +17,12 @@ void initACPI() {
     outportb(fadt->smiCommandPort,fadt->acpiEnable);
   }
 }
+Feature _acpi_ = {
+  .state = DISABLED,
+  .label = "ACPI",
+  .initialize = &initACPI
+};
+
 void shutdown() {
   /* FIXME: Magic values only recognized by Bochs. */
   outportw(0xb004,0x2000);

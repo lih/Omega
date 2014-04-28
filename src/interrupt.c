@@ -5,14 +5,9 @@
 #include "schedule.h"
 #include "feature.h"
 
-IDTEntry idts[256];
-typedef struct {
-  word limit;
-  IDTEntry* idts;
-} __attribute__((__packed__)) IDTPtr;
-IDTPtr idtp = {
-  .limit = 256*sizeof(IDTEntry) - 1,
-  .idts = &idts
+TablePtr idt = {
+  .limit = 49*sizeof(Descriptor) - 1,
+  .base = &idts
 };
 
 void isr0(); void isr1(); void isr2(); void isr3(); void isr4(); void isr5(); void isr6(); void isr7(); void isr8(); void isr9(); void isr10(); void isr11(); void isr12(); void isr13(); void isr14(); void isr15(); void isr16(); void isr17(); void isr18(); 
@@ -23,13 +18,11 @@ char* descriptions[32];
 IDTHandler irqs[16] = { 0 };
 SyscallHandler syscalls[16] = { 0 };
 
-void initInterrupts() {
-  require(EXCEPTIONS);
-  require(IRQS);
+static void initInterrupts() {
+  require(&_exceptions_);
+  require(&_irqs_);
    
-  idtp.limit = 49*sizeof(IDTEntry) - 1;
-  idtp.idts = &idts;
-  loadInterrupts(&idtp);
+  loadInterrupts(&idt);
 
   outportb(0x20, 0x11);
   outportb(0xA0, 0x11);
@@ -44,12 +37,17 @@ void initInterrupts() {
     
   enableInterrupts();
 }
+Feature _interrupts_ = {
+  .state = DISABLED,
+  .label = "interrupts",
+  .initialize = initInterrupts
+};
 
 #define DEFIDT(base,off,n) \
-  idts[off+n] = idtEntry((dword)base##n,CODE_SEGMENT,0,1)
+  idts[off+n] = interruptGate(CODE_SEGMENT,base##n,0)
 
 #define DEFEXC(n) DEFIDT(isr,0,n)
-void initExceptions() {
+static void initExceptions() {
   descriptions[0]="Division by Zero";
   descriptions[1]="Debug";
   descriptions[2]="Non Maskable Interrupt";
@@ -92,10 +90,16 @@ void initExceptions() {
   
   int i;
   for(i=19;i<32;i++) {
-    idts[i] = idtEntry((dword)reservedException,CODE_SEGMENT,0,1);
+    idts[i] = interruptGate(CODE_SEGMENT,(dword)reservedException,0);
     descriptions[i]="Reserved";
   }
 }
+Feature _exceptions_ = {
+  .state = DISABLED,
+  .label = "exceptions",
+  .initialize = &initExceptions
+};
+
 void handleException(IDTParams* regs) {
   dword ex_num = regs->int_no;
 
@@ -109,7 +113,7 @@ void handleException(IDTParams* regs) {
 }
 
 #define DEFIRQ(n) DEFIDT(irq,32,n)
-void initIRQs() {
+static void initIRQs() {
   DEFIRQ(0);
   DEFIRQ(1);
   DEFIRQ(2);
@@ -127,6 +131,11 @@ void initIRQs() {
   DEFIRQ(14);
   DEFIRQ(15);
 }
+Feature _irqs_ = {
+  .state = DISABLED,
+  .label = "IRQs",
+  .initialize = initIRQs
+};
 void handleIRQ(IDTParams* regs) {
   dword irqNum = regs->int_no;
   IDTHandler f = irqs[irqNum];
@@ -142,10 +151,10 @@ void handleIRQ(IDTParams* regs) {
 }
 
 void handleSyscalls() {
-  TSS* tss = getTSS();
+  Task* task = getTask();
   while(1) {
-    TSS* state = descBase(gdtDesc.base[tss->previousTask / sizeof(Descriptor)]);
-    dword scnum = state->eax;
+    Task* state = descBase(DESCRIPTOR_AT(gdt,task->tss.previousTask));
+    dword scnum = state->tss.eax;
     SyscallHandler f;
 
     if(scnum<16 && (f = syscalls[scnum]) != 0) 
@@ -156,47 +165,21 @@ void handleSyscalls() {
     asm __volatile__ ( "iret" );
   }
 }
-void initSyscalls() {
-  require(SCHEDULE);
+static void initSyscalls() {
+  require(&_schedule_);
   
-  TSS* systss = newTSS();
-  *systss = *(TSS*)descBase(gdtDesc.base[rootGate / sizeof(Descriptor)]);
-  systss->eip = handleSyscalls;
-  systss->esp = SYS_STACK;
+  Task* systss = newTask();
+  systss->tss = *(TSS*)descBase(DESCRIPTOR_AT(gdt,rootGate));
+  systss->tss.eip = handleSyscalls;
+  systss->tss.esp = SYS_STACK;
   
-  word sysdesc = addDescriptor(tssDesc(systss,0));
-  idts[48] = tssGate(sysdesc,0);
+  Selector sysdesc = addDesc(&gdt,tssDesc(systss,0,0));
+  idts[48] = taskGate(sysdesc,0);
   
-  loadInterrupts(&idtp);
+  loadInterrupts(&idt);
 }
-
-IDTEntry tssGate(word tssSel,byte dpl) {
-  IDTEntry ret = {
-    .base_lo = 0,
-    .sel = tssSel,
-    ._zero = 0,
-    .flags = {
-      ._fourteen = 5,
-      .dpl = dpl,
-      .present = 1
-    },
-    .base_hi = 0
-  };
-
-  return ret;
-}
-IDTEntry idtEntry(dword base,word sel,byte dpl,byte present) {
-  IDTEntry ret = {
-    .base_lo = base & 0xffff,
-    .sel = sel,
-    ._zero = 0,
-    .flags = {
-      ._fourteen = 14,
-      .dpl = dpl,
-      .present = present
-    },
-    .base_hi = base >> 16
-  };
-
-  return ret;
-}
+Feature _syscalls_ = {
+  .state = DISABLED,
+  .label = "syscalls",
+  .initialize = initSyscalls
+};

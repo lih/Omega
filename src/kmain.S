@@ -1,7 +1,7 @@
 %include "constants.S"
 
 section .text
-global kmain,gdtDesc,KERNEL_SIZE
+global kmain,gdt,KERNEL_SIZE
 extern main,KERNEL_END
 
 kmain:
@@ -55,7 +55,7 @@ end_entry:
 	cli
 	xor ax,ax
 	mov ds,ax
-	lgdt [gdtDesc]
+	lgdt [gdt]
 
 	mov eax,cr0
 	or eax,1
@@ -81,11 +81,11 @@ KERNEL_SIZE:
 	dd KERNEL_END-KERNEL_START
 	
 	dw 0
-gdtDesc:
-	dw gdt_end-gdt
-	dd gdt
-
 gdt:
+	dw gdt_end-gdt_start
+	dd gdt_start
+
+gdt_start:
 	dq 0
 
 	;; GDT code segment

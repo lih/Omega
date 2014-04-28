@@ -29,7 +29,7 @@ Dir* newDir() {
   return ret;
 }
 Universe* newUniverse() {
-  require(MEMORY);
+  require(&_memory_);
   
   Universe* ret = poolAlloc(&univPool);
   ret->pageDir = newDir();
@@ -53,8 +53,8 @@ DirEntry* dirVal(Dir* dir,dword vpage) {
   
   return F_ADDR(*pgDir) + pageind;
 }
-void initUniverse() {
-  require(MEMORY);
+static void initUniverse() {
+  require(&_memory_);
 
   univPool = pool(sizeof(Universe));
   pageCounters = newDir();
@@ -70,11 +70,15 @@ void initUniverse() {
   setPageDirectory(kernelSpace.pageDir);
   enablePaging();
 }
+Feature _universe_ = {
+  .state = DISABLED,
+  .label = "universe",
+  .initialize = &initUniverse
+};
 void mapPage(Universe* univ,dword vpage,void* page) {
   Dir* pgDir = univ->pageDir;
   DirEntry* oldmap = dirVal(pgDir,vpage);
   
-  printf("mapPage: oldmap=%d page=%x\n",*oldmap,page);
   if(*oldmap != 0) {
     DirEntry* oldCounter = dirVal(pageCounters,*oldmap);
     
@@ -94,5 +98,4 @@ void mapPage(Universe* univ,dword vpage,void* page) {
     *oldmap = (dword)page | PT_FLAGS;
     (*counter)++;
   }
-  printf("mapPage2: oldmap=%x page=%x\n",*oldmap,page);
 }

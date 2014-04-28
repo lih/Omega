@@ -2,7 +2,7 @@
 #include "pervasives.h"
 #include "interrupt.h"
 
-void handleKey();
+static void handleKey();
 
 extern int running;
 char layout[128] = {
@@ -44,11 +44,16 @@ char layout[128] = {
   0,	/* All other keys are undefined */
 };
 
-void initKeyboard() {
+static void initKeyboard() {
   irqs[1] = handleKey;
 }
+Feature _keyboard_ = {
+  .state = DISABLED,
+  .label = "keyboard",
+  .initialize = &initKeyboard
+};
 
-void handleKey(IDTParams* _) {
+static void handleKey(IDTParams* _) {
   int scan = inportb(0x60);
   
   if(!(scan & 0x80)) {

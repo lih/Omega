@@ -16,10 +16,10 @@ SECTIONS
     KERNEL_DATA = .;
     *(.data)
   }
-  KERNEL_END = .;
   .bss ALIGN(8) : {
     KERNEL_BSS = .;
     *(.bss)
   }
+  KERNEL_END = .;
 }
 EOF

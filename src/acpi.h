@@ -66,6 +66,6 @@ typedef struct {
   byte  Century;
 } FADT;
 
-extern Feature feature_acpi;
+extern Feature _acpi_;
 
 #endif

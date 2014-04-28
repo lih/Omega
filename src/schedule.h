@@ -5,41 +5,27 @@
 #include "universe.h"
 #include "interrupt.h"
 
-typedef struct TSS {
-  word previousTask, _1;
-  dword esp0; word ss0,_2;
-  dword esp1; word ss1,_3;
-  dword esp2; word ss2,_4;
-  dword cr3, eip, eflags,
-    eax,ecx,edx,ebx,esp,ebp,esi,edi;
-  word es,_5,cs,_6,ss,_7,
-    ds,_8,fs,_9,gs,_10,
-    ldt, _11;
-  word trap:1;
-  word _12:15;
-  word iomap;
+typedef struct Task {
+  TSS tss;
   /* Additional fields needed to identify tasks */
   struct RR* rr;
-} __attribute__((__packed__)) TSS;
+} PACKED Task;
 typedef struct RR {
   struct RR* next;
   struct RR* prev;
-  TSS* tss;
+  Task* task;
   Universe* univ;
   int slot;
 } RR;
+
+extern Feature _schedule_;
 
 extern int timerPhase;
 extern int seconds,millis;
 extern word rootGate;
 
-Descriptor tssDesc(TSS* tss,byte dpl);
-TSS        tss(Dir*,word,dword,word,dword,word,dword);
-TSS*       newTSS();
-
-TSS*   getTSS();
-
-void initSchedule();
+Task* newTask();
+Task* getTask();
 
 void setTimerFreq(int hz);
 

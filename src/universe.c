@@ -19,7 +19,7 @@
 
 Dir* pageCounters;
 Universe kernelSpace;
-Pool univPool;
+Pool univPool = { NULL, sizeof(Universe) };
 
 Dir* newDir() {
   Dir* ret = allocatePage();
@@ -56,7 +56,6 @@ DirEntry* dirVal(Dir* dir,dword vpage) {
 static void initUniverse() {
   require(&_memory_);
 
-  univPool = pool(sizeof(Universe));
   pageCounters = newDir();
 
   Dir* pgDir = newDir();
@@ -99,3 +98,4 @@ void mapPage(Universe* univ,dword vpage,void* page) {
     (*counter)++;
   }
 }
+

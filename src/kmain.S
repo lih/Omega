@@ -82,7 +82,7 @@ KERNEL_SIZE:
 	
 	dw 0
 gdt:
-	dw gdt_end-gdt_start
+	dw gdt_end-gdt_start-1
 	dd gdt_start
 
 gdt_start:

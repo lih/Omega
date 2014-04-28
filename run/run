@@ -1,0 +1,5 @@
+#!/bin/bash
+./bochs -q -f "$1/bochsrc" -rc "$1/in" -log "$1/out"
+
+grep CPU0 "$1/out" | less
+

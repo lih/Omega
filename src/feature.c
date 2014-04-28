@@ -7,7 +7,7 @@ void padLine() {
   int i; 
   for(i=0;i<featureDepth;i++)
     printStr("  ");
-  printStr("* ");
+  printStr("- ");
 }
 void require(Feature* feature) {
   switch(feature->state) {
@@ -18,10 +18,10 @@ void require(Feature* feature) {
     break;
   case DISABLED: {
     feature->state = ENABLING;
-    padLine(); printf("Initializing %s\n",feature->label);
     featureDepth++;
     feature->initialize();
     featureDepth--;
+    padLine(); printf("Initialized %s\n",feature->label);
     feature->state = ENABLED;
     break;
   }

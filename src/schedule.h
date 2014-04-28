@@ -3,7 +3,13 @@
 
 #include "descriptors.h"
 #include "universe.h"
-#include "interrupt.h"
+
+#define MAX_THREADS 1024
+#define STACK_PAGES 16
+#define STACK_SIZE  (STACK_PAGES * PAGE_SIZE)
+#define STACK_START(slot) (-((1+(slot))*STACK_SIZE))
+#define STACK_PAGE(s,i) (s-(i+1)*PAGE_SIZE)
+
 
 typedef struct Task {
   TSS tss;
@@ -22,15 +28,12 @@ extern Feature _schedule_;
 
 extern int timerPhase;
 extern int seconds,millis;
-extern word rootGate;
+
+extern Selector scheduleGate;
 
 Task* newTask();
 Task* getTask();
 
 void setTimerFreq(int hz);
-
-dword syscall_die();
-dword syscall_spawn(dword eip);
-dword syscall_warp(Universe* u,dword eip);
 
 #endif

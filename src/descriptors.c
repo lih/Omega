@@ -3,7 +3,7 @@
 Descriptor idts[256];
 
 Selector addDesc(TablePtr* tbl,Descriptor desc) {
-  int index = tbl->limit / sizeof(Descriptor);
+  int index = (1+tbl->limit) / sizeof(Descriptor);
 
   tbl->base[index] = desc;
   tbl->limit += sizeof(Descriptor);

@@ -29,7 +29,6 @@ typedef struct {
   dword type;
   dword attributes;
 } MMapEntry;
-
 static void initialize() {
   MMapEntry* entries = (void*)MEM_MAP;
   dword size = *(dword*)MEM_MAP_SIZE;
@@ -60,22 +59,14 @@ Feature _memory_ = {
   .initialize = &initialize
 };
 
-Pool pool(int blocksize) {
-  Pool ret = {
-    .head = NULL,
-    .blockSize = blocksize
-  };
-  return ret;
-}
-
 void* poolAlloc(Pool* pool) {
   if(IS(pool->head,0)) {
     /* We allocate a new page for our pool */
     void* newp = allocatePage();
     PoolBlock* last = 0;
-    int i;
     int limit = PAGE_SIZE - pool->blockSize;
 
+    int i;
     for(i=0;i<=limit;i+=pool->blockSize) {
       PoolBlock* cur = newp + i;
       cur->next = last;

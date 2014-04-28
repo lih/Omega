@@ -4,6 +4,8 @@
 #include "pervasives.h"
 #include "schedule.h"
 #include "feature.h"
+#include "syscall.h"
+#include "timer.h"
 
 TablePtr idt = {
   .limit = 49*sizeof(Descriptor) - 1,
@@ -21,8 +23,9 @@ SyscallHandler syscalls[16] = { 0 };
 static void initInterrupts() {
   require(&_exceptions_);
   require(&_irqs_);
+  require(&_syscalls_);
    
-  loadInterrupts(&idt);
+  loadInterrupts();
 
   outportb(0x20, 0x11);
   outportb(0xA0, 0x11);
@@ -114,7 +117,7 @@ void handleException(IDTParams* regs) {
 
 #define DEFIRQ(n) DEFIDT(irq,32,n)
 static void initIRQs() {
-  DEFIRQ(0);
+  idts[32] = taskGate(scheduleGate,0);
   DEFIRQ(1);
   DEFIRQ(2);
   DEFIRQ(3);
@@ -150,36 +153,9 @@ void handleIRQ(IDTParams* regs) {
   outportb(0x20, 0x20);
 }
 
-void handleSyscalls() {
-  Task* task = getTask();
-  while(1) {
-    Task* state = descBase(DESCRIPTOR_AT(gdt,task->tss.previousTask));
-    dword scnum = state->tss.eax;
-    SyscallHandler f;
+void sys_alloc(struct Task* t) {
+  dword vpage = t->tss.ebx;
+  void* newPage = allocatePage();
 
-    if(scnum<16 && (f = syscalls[scnum]) != 0) 
-      f(state);
-    else
-      printf("Unhandled syscall %d\n",scnum);
-
-    asm __volatile__ ( "iret" );
-  }
+  mapPage(t->rr->univ,vpage,newPage);
 }
-static void initSyscalls() {
-  require(&_schedule_);
-  
-  Task* systss = newTask();
-  systss->tss = *(TSS*)descBase(DESCRIPTOR_AT(gdt,rootGate));
-  systss->tss.eip = handleSyscalls;
-  systss->tss.esp = SYS_STACK;
-  
-  Selector sysdesc = addDesc(&gdt,tssDesc(systss,0,0));
-  idts[48] = taskGate(sysdesc,0);
-  
-  loadInterrupts(&idt);
-}
-Feature _syscalls_ = {
-  .state = DISABLED,
-  .label = "syscalls",
-  .initialize = initSyscalls
-};

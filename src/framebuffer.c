@@ -109,6 +109,7 @@ void printf(char* f,...) {
     }
     f++;
   }
+  setCursor();
 }
 
 void clearFB() {

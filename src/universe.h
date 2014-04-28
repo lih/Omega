@@ -15,6 +15,7 @@ extern Universe kernelSpace;
 extern Universe rootSpace;
 
 Universe* newUniverse();
+
 void      mapPage(Universe* univ,dword vpage,void* page);
 DirEntry* dirVal(Dir*,dword);
 

@@ -8,25 +8,28 @@
 #include "pervasives.h"
 #include "acpi.h"
 #include "feature.h"
+#include "timer.h"
 
 int running = 0; 
+
+#define RED charMode = 0x0c;
+#define GREEN charMode = 0x02;
+#define CLEAR charMode = 0x0b;
 
 void main () {
   clearFB();
 
-  charMode = 0x0c;
-  printf("Initializing Omega: \n");
+  RED printf("Initializing Omega: \n");
 
-  charMode = 0x02;
-  printf("Loaded kernel of size %dB (%d sectors)\n",KERNEL_SIZE,(KERNEL_SIZE+0x1ff)>>9);
-  require(&_acpi_);
-  require(&_universe_);  
-  require(&_schedule_);
+  GREEN;
+  printf("- Loaded kernel of size %dB (%d sectors)\n",KERNEL_SIZE,(KERNEL_SIZE+0x1ff)>>9);
+  require(&_timer_);
   require(&_keyboard_);
-  require(&_syscalls_);
-  setCursor();
+  require(&_acpi_);
 
-  charMode = 0x0b;
+  RED printf("The system is operational !\n");
+
+  CLEAR;
 
   running = 1;
   while(running) {

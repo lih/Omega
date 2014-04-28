@@ -22,6 +22,7 @@
 #define SYS_WARP 0
 #define SYS_SPAWN 1
 #define SYS_DIE 2
+#define SYS_ALLOC 3
 
 extern void KERNEL_END;
 extern int const KERNEL_SIZE;

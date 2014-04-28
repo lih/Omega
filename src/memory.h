@@ -25,6 +25,10 @@ extern int page_count;
 void* allocatePage();
 void freePage(void*);
 
+/* 
+   Allocation pools of fixed-size objects (with constant-time
+   alloc() and free()).
+*/
 typedef union PoolBlock {
   union PoolBlock* next;
   byte data[0];
@@ -35,7 +39,6 @@ typedef struct {
   int blockSize;
 } Pool;
 
-Pool pool(int blockSize);
 void* poolAlloc(Pool* pool);
 void poolFree(Pool* pool,void* p);
 

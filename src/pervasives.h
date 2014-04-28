@@ -1,13 +1,12 @@
 #ifndef INCLUDED_PERVASIVES
 #define INCLUDED_PERVASIVES
 
-#include "descriptors.h"
 #include "memory.h"
 
 void	shutdown();
 void	nop();
 
-void    loadInterrupts(TablePtr* p);
+void    loadInterrupts();
 
 void	enablePaging();
 void	disablePaging();

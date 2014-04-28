@@ -52,7 +52,7 @@ tops), one to reference them all for easy access, one to spawn and
 monitor user programs. Counting large, that leaves us with less than
 thirty additional modules to be loaded before the operating system may
 be used fully. By my calculations, if each module takes as long as the
-kernel to load and initialize (~10ms), a fully-functional system is a
+kernel to load and initialize (<10ms), a fully-functional system is a
 few milliseconds away from pushing a button, which I deem *fast enough*(tm)
 
 Compiling and running Omega
@@ -75,9 +75,9 @@ specification, but I haven't tested it on real hardware yet (I like to
 think inside the Bochs ;-) )
 
 Running Omega in Bochs is really easy too : just tell Bochs to treat
-`Omega.img` as a primary drive and boot from that drive. A configuration
-file is provided in `bochs/bochsrc` as an example, although you may need
-to adjust the paths to get it working.
+`Omega.img` as a primary drive and boot from that drive. Configuration files
+are provided in `run/fast` and `run/gui` to run Omega on either a regular (fast)
+or a debugging (gui) interface. 
 
 Remaining work
 ==============
@@ -87,10 +87,32 @@ have not yet been implemented. They will be in the coming times, but for
 now they are listed here : 
 
   * Scheduling tasks of lesser privilege levels (it should work in theory but is not yet tested)
-  * Syscalls interrupts to let programs query the kernel
   * Synchronization primitives, since this will be a multithreaded kernel
   * Perhaps a small filesystem driver to bootstrap the first few universes
   * Perhaps even a small TFTP and NIC driver for booting over PXE
 
-...aaand we'll be done ! All other work shall be 
+...aaand we'll be done ! All subsequent work shall be directed towards
+the user interface, involving sound, video, keyboard and mouse, disk
+and network interfaces that will allow programs to easily access most
+aspect of a typical computer.
+
+In order from most to least important, I plan to implement the
+following functionalities :
+ 
+  * A general filesystem-environment-discovery interface, associating
+    data to keys on a system-wide scale. It may be used to access
+    files, permissions, virtual filesystem, environment variables and
+    many other things, I'm sure.
+
+  * A graphical interface stack (from driver to windowing environment)
+    and simple toolkit.
+
+  * A general-purpose editing program to manipulate the abstract
+    concepts in an intuitive way.
+
+  * A programming language to take advantage of the editor, and yield
+    the best productivity from Omega. A compiler to turn that language
+    into reality.
+
+  * Any other tool, game or program I might think of :-D
 

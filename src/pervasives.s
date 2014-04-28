@@ -5,7 +5,7 @@ global nop, flushGDT, \
 	outportb,inportb,inportw,outportw, \
 	setPageDirectory,enablePaging,disablePaging, \
 	getTaskRegister,setTaskRegister
-
+	
 nop:
 	times 100 nop
 	ret
@@ -28,7 +28,7 @@ getTaskRegister:
 	str ax
 	ret
 setTaskRegister:
-	mov eax,[esp+4]
+	mov ax,[esp+4]
 	ltr ax
 	ret
 	

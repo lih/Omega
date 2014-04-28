@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "memory.h"
 #include "universe.h"
+#include "schedule.h"
 
 #define F_PRESENT 1
 #define F_RW      2
@@ -28,12 +29,10 @@ Dir* newDir() {
   return ret;
 }
 Universe* newUniverse() {
+  require(MEMORY);
+  
   Universe* ret = poolAlloc(&univPool);
-  ret->pageDir = allocatePage();
-
-  int i;
-  for(i=0;i<DIR_SIZE;i++)
-    (*ret->pageDir)[i] = 0;
+  ret->pageDir = newDir();
   
   return ret;
 }
@@ -55,6 +54,8 @@ DirEntry* dirVal(Dir* dir,dword vpage) {
   return F_ADDR(*pgDir) + pageind;
 }
 void initUniverse() {
+  require(MEMORY);
+
   univPool = pool(sizeof(Universe));
   pageCounters = newDir();
 
@@ -72,7 +73,8 @@ void initUniverse() {
 void mapPage(Universe* univ,dword vpage,void* page) {
   Dir* pgDir = univ->pageDir;
   DirEntry* oldmap = dirVal(pgDir,vpage);
-
+  
+  printf("mapPage: oldmap=%d page=%x\n",*oldmap,page);
   if(*oldmap != 0) {
     DirEntry* oldCounter = dirVal(pageCounters,*oldmap);
     
@@ -82,7 +84,7 @@ void mapPage(Universe* univ,dword vpage,void* page) {
       freePage(F_ADDR(*oldmap));
   }
   
-  page = (dword)page & 0xfffffc00;
+  page = (dword)page & 0xfffff000;
 
   if(IS(page,NULL))
     *oldmap = 0;
@@ -92,4 +94,5 @@ void mapPage(Universe* univ,dword vpage,void* page) {
     *oldmap = (dword)page | PT_FLAGS;
     (*counter)++;
   }
+  printf("mapPage2: oldmap=%x page=%x\n",*oldmap,page);
 }

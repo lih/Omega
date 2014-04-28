@@ -11,11 +11,14 @@ typedef struct {
 } Universe;
 
 extern Universe kernelSpace;
+extern Universe rootSpace;
 
 Universe* newUniverse();
 
 void initUniverse();
 void mapPage(Universe* univ,dword vpage,void* page);
+
+DirEntry* dirVal(Dir*,dword);
 
 #endif
 

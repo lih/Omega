@@ -2,6 +2,7 @@
 #define INCLUDED_MEMORY
 
 #include "constants.h"
+#include "feature.h"
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -14,10 +15,11 @@ typedef union page {
 
 #define NULL 0
 #define IS(a,b) ((a)==(b))
+#define SET_STRUCT(t,v,...) { t __tmp__ = __VA_ARGS__; v = __tmp__; }
+#define AS(t,e) (*(t*)(&(e)))
 
+extern Feature feature_memory;
 extern int page_count;
-
-void initMemory();
 
 void* allocatePage();
 void freePage(void*);

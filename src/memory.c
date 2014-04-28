@@ -34,12 +34,13 @@ void initMemory() {
   dword size = *(dword*)MEM_MAP_SIZE;
   int i;
 
+  page_count = 0;
   page_head = NULL;
   for(i=0;i<size;i++) {
     page* current = (page*)(entries[i].base_lo & ~(PAGE_SIZE-1));
     dword end = ((dword)current) + entries[i].length_lo;
 
-    if(current < 0x10000)  current = 0x10000;
+    if(current < 0x12000)  current = 0x12000;
     
     while(((dword)current) < end) {
       current->next = page_head;
@@ -48,6 +49,9 @@ void initMemory() {
       current++;
     }
   }
+
+  padLine();
+  printf("Detected %d bytes of memory spread across %d pages\n",page_count*PAGE_SIZE,page_count);
 }
 
 Pool pool(int blocksize) {

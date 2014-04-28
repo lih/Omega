@@ -12,7 +12,7 @@ reset_drive:
 	;; load the first sector of our kernel at a proper location
 	mov ax, 0
 	mov es, ax
-	mov bx, KERNEL
+	mov bx, KERNEL_START
 
 	mov ah, 02h
 	mov al, 01h
@@ -24,7 +24,7 @@ reset_drive:
 	jnz reset_drive
 
 	;; once loaded, jump to the main kernel function
-	jmp KERNEL
+	jmp KERNEL_START
 
 	times (510-($-$$)) db 0
 	dw 0aa55h

@@ -1,4 +1,10 @@
+#include "feature.h"
+#include "pervasives.h"
+#include "interrupt.h"
 
+void handleKey();
+
+extern int running;
 char layout[128] = {
   0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
   '9', '0', '-', '=', '\b',	/* Backspace */
@@ -37,3 +43,29 @@ char layout[128] = {
   0,	/* F12 Key */
   0,	/* All other keys are undefined */
 };
+
+void initKeyboard() {
+  irqs[1] = handleKey;
+}
+
+void handleKey(IDTParams* _) {
+  int scan = inportb(0x60);
+  
+  if(!(scan & 0x80)) {
+    switch(layout[scan]) {
+    case 0:
+      printf("Unassociated scancode %d\n",scan);
+      break;
+      
+    case 27: /* ESCAPE */
+      running = 0;
+      break;
+
+    default:
+      putChar(layout[scan]);
+    }
+
+    setCursor();
+  }
+} 
+

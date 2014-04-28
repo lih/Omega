@@ -5,7 +5,7 @@
 #include "universe.h"
 #include "interrupt.h"
 
-typedef struct {
+typedef struct TSS {
   word previousTask, _1;
   dword esp0; word ss0,_2;
   dword esp1; word ss1,_3;
@@ -31,15 +31,20 @@ typedef struct RR {
 
 extern int timerPhase;
 extern int seconds,millis;
+extern word rootGate;
 
 Descriptor tssDesc(TSS* tss,byte dpl);
 TSS        tss(Dir*,word,dword,word,dword,word,dword);
+TSS*       newTSS();
+
+TSS*   getTSS();
 
 void initSchedule();
-void yield();
-RR* spawn(dword eip);
-void die();
 
 void setTimerFreq(int hz);
+
+dword syscall_die();
+dword syscall_spawn(dword eip);
+dword syscall_warp(Universe* u,dword eip);
 
 #endif

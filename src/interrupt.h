@@ -22,13 +22,18 @@ typedef struct {
   dword eip, cs, eflags, useresp, ss;		/* pushed by the processor automatically */ 
 } __attribute__((__packed__)) IDTParams;
 typedef void(*IDTHandler)(IDTParams*);
+typedef void(*SyscallHandler)(struct TSS*);
 
+extern IDTEntry idts[256];
 extern IDTHandler irqs[16];
-extern IDTHandler syscalls[207];
+extern SyscallHandler syscalls[16];
 
 void initInterrupts();
 
 void enableInterrupts();
 void disableInterrupts();
+
+IDTEntry idtEntry(dword base,word sel,byte dpl,byte present);
+IDTEntry tssGate(word tssSel,byte dpl);
 
 #endif

@@ -1,8 +1,6 @@
 #include "acpi.h"
 #include "framebuffer.h"
 
-#define AS(t,e) (*(t*)(&(e)))
-
 RSDP* rsdp;
 FADT* fadt;
 

@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "memory.h"
+#include "feature.h"
 
 typedef struct {
   char signature[8];
@@ -64,6 +65,7 @@ typedef struct {
   byte  MonthAlarm;
   byte  Century;
 } FADT;
-void initACPI();
+
+extern Feature feature_acpi;
 
 #endif

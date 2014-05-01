@@ -40,7 +40,7 @@ static void initialize() {
     page* current = (page*)(entries[i].base_lo & ~(PAGE_SIZE-1));
     dword end = ((dword)current) + entries[i].length_lo;
 
-    if(current < 0x12000)  current = 0x12000;
+    if(current < HEAP_START)  current = HEAP_START;
     
     while(((dword)current) < end) {
       current->next = page_head;

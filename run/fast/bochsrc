@@ -1,5 +1,5 @@
 megs: 32
-clock: sync=realtime
+# clock: sync=realtime
 romimage: file=build/bios/BIOS-bochs-latest
 vgaromimage: file=build/bios/VGABIOS-elpin-2.40
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14

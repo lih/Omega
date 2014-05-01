@@ -6,8 +6,8 @@ dword featureDepth = 0;
 void padLine() {
   int i; 
   for(i=0;i<featureDepth;i++)
-    printStr("  ");
-  printStr("- ");
+    printStr("+-");
+  printStr("+ ");
 }
 void require(Feature* feature) {
   switch(feature->state) {

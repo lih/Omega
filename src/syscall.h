@@ -11,7 +11,8 @@ void sys_warp(Task*);
 void sys_alloc(Task*);
 
 dword syscall_die();
-dword syscall_spawn(dword eip);
+dword syscall_spawn(Universe* u,dword eip);
 dword syscall_warp(Universe* u,dword eip);
+dword syscall_alloc(void* page);
 
 #endif

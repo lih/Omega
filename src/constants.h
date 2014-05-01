@@ -5,9 +5,13 @@
 #define MEM_MAP      0x1008
 #define MEM_MAP_SIZE 0x1000
 
-#define KERNEL_STACK 0x10000
-#define INT_STACK    0x11000
-#define SYS_STACK    0x12000
+#define KERNEL_STACK 0x10e00
+#define INT_STACK    0x12000
+#define SYS_STACK    0x13000
+#define KEY_STACK    0x14000
+#define EXC_STACK    0x15000
+#define IRQ_STACK    0x16000
+#define HEAP_START   0x16000
 
 #define SMAP_MAGIC   0x534D4150
 #define PAGE_SIZE    0x1000
@@ -19,10 +23,10 @@
 
 #define TIMER_FREQ 256
 
-#define SYS_WARP 0
+#define SYS_DIE 0
 #define SYS_SPAWN 1
-#define SYS_DIE 2
-#define SYS_ALLOC 3
+#define SYS_ALLOC 2
+#define SYS_WARP 3
 
 extern void KERNEL_END;
 extern int const KERNEL_SIZE;

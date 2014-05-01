@@ -1,13 +1,14 @@
 #include "descriptors.h"
+#include "framebuffer.h"
 
-Descriptor idts[256];
+Descriptor idts[256] = { 0 };
 
 Selector addDesc(TablePtr* tbl,Descriptor desc) {
   int index = (1+tbl->limit) / sizeof(Descriptor);
 
   tbl->base[index] = desc;
   tbl->limit += sizeof(Descriptor);
-
+  
   return index*sizeof(Descriptor);
 }
 
@@ -15,16 +16,18 @@ void* descBase(Descriptor d) {
   return d.base_lo + (d.base_mi << 16) + (d.base_hi << 24);
 }
 
-TSS tss(Dir* pageDir,word ss0,dword esp0,
-	word ss1,dword esp1,word ss2,dword esp2) {
+TSS tss(Dir* pageDir,dword eip,dword esp) {
   TSS ret = {
-    .esp0 = esp0, .ss0 = ss0,
-    .esp1 = esp1, .ss1 = ss1,
-    .esp2 = esp2, .ss2 = ss2,
+    .eflags = { 
+      ._one = 1, ._zero = 0, ._zero2 = 0, ._zero3 = 0, ._zero4 = 0,
+      ._if = 1, .iopl = 0
+    },
     .cs = CODE_SEGMENT, .ds = DATA_SEGMENT, .es = DATA_SEGMENT,
     .fs = DATA_SEGMENT, .gs = DATA_SEGMENT, .ss = DATA_SEGMENT,
     .cr3 = (dword)pageDir,
-    .trap = 0
+    .trap = 0,
+    .eip = eip,
+    .esp = esp
   };
 
   return ret;
@@ -33,7 +36,7 @@ TSS tss(Dir* pageDir,word ss0,dword esp0,
 Descriptor tssDesc(TSS* tss,byte dpl,byte busy) {
   dword base = tss;
   Descriptor ret = {
-    .limit_lo = sizeof(TSS),
+    .limit_lo = sizeof(TSS)-1,
     .base_lo = base,
     .base_mi = base >> 16,
     .type = 9 | (busy?2:0),

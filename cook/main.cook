@@ -7,7 +7,9 @@ HOOKS = hooks;
 BUILD = .build;
 BIN = [BUILD]/obj;
 SRC = src;
+DOCSRC = docs;
 DIST = dist;
+DOC = [DIST]/doc;
 
 setenv SRC = [SRC];
 setenv BUILD = [BUILD];
@@ -17,9 +19,13 @@ setenv BIN = [BIN];
 
 sources = [collect ls [SRC]/'*'.s [SRC]/'*'.c];
 headers = [collect ls [SRC]/'*'.h];
+docsrc = [collect ls [DOCSRC]/'*'.md];
 
 all: [DIST]/Omega.img {
      echo All done !;
+}
+docs: [fromto [DOCSRC]/%0%.md [DOC]/%0%.html [docsrc]] {
+      echo Documentation available in [DOC];
 }
 clean: {
        rm -rf [BUILD] [DIST]/Omega.img;
@@ -44,3 +50,6 @@ clean: {
 
 [DIST]/Omega.img: [HOOKS]/Disk [BIN]/bootsector.bin(weak) [BIN]/kernel.bin(weak) 
 { function rawhook; }
+
+[DOC]/%0%.html: [HOOKS]/Doc [DOCSRC]/%0%.md(weak)
+{ function hook; }

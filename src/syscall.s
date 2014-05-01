@@ -14,10 +14,13 @@
 	syscallstub_1 %1
 %endmacro	
 
-global syscall_die,syscall_spawn,syscall_warp
+global syscall_die,syscall_spawn,syscall_warp,syscall_alloc
 syscall_die:
 	syscallstub_0 SYS_DIE
 syscall_spawn:	
-	syscallstub_1 SYS_SPAWN
-syscall_warp:	
+	syscallstub_2 SYS_SPAWN
+syscall_warp:
 	syscallstub_2 SYS_WARP
+syscall_alloc:
+	syscallstub_1 SYS_ALLOC
+	

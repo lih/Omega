@@ -1,8 +1,12 @@
 #include "feature.h"
 #include "pervasives.h"
 #include "interrupt.h"
+#include "descriptors.h"
 
-static void handleKey();
+Selector keyboardGate;
+
+void handleKey(byte);
+extern void handleKeyboard();
 
 extern int running;
 char layout[128] = {
@@ -45,7 +49,9 @@ char layout[128] = {
 };
 
 static void initKeyboard() {
-  irqs[1] = handleKey;
+  TSS* keyTSS = KEY_STACK-sizeof(TSS);
+  *keyTSS = tss(kernelSpace.pageDir,handleKeyboard,KEY_STACK-sizeof(TSS));
+  keyboardGate = addDesc(&gdt,tssDesc(keyTSS,0,0));
 }
 Feature _keyboard_ = {
   .state = DISABLED,
@@ -53,24 +59,48 @@ Feature _keyboard_ = {
   .initialize = &initKeyboard
 };
 
-static void handleKey(IDTParams* _) {
-  int scan = inportb(0x60);
-  
+byte ctrl = 0, shift = 0, alt = 0;
+
+void handleKey(byte scan) {
   if(!(scan & 0x80)) {
     switch(layout[scan]) {
     case 0:
-      printf("Unassociated scancode %d\n",scan);
+      switch(scan) {
+      case 42:			/* Shift */
+	shift = 1;
+	break;
+      case 29:			/* Ctrl */
+	ctrl = 1;
+	break;
+      case 56: 			/* Alt */
+	alt = 1;
+	break;
+      default:
+	printf("Unassociated scancode %d\n",scan);
+      }
       break;
       
     case 27: /* ESCAPE */
-      running = 0;
+      if(ctrl && alt)
+	shutdown();
       break;
-
+      
     default:
-      putChar(layout[scan]);
+      putChar(layout[scan] - (shift*32));
     }
 
     setCursor();
   }
+  else switch(scan) {
+    case 170:			/* Unshift */
+      shift = 0;
+      break;
+    case 157: 			/* Unctrl */
+      ctrl = 0;
+      break;
+    case 184:			/* Unalt */
+      alt = 0;
+      break;
+    }
 } 
 

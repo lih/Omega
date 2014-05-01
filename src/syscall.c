@@ -1,12 +1,17 @@
 #include "interrupt.h"
 #include "syscall.h"
 #include "schedule.h"
+#include "descriptors.h"
+
+Selector sysGate;
 
 void handleSyscalls() {
-  Task* task = getTask();
+  TSS* ss = TSS_AT(getTaskRegister());
+
+  disableInterrupts();
   while(1) {
-    Task* state = descBase(DESCRIPTOR_AT(gdt,task->tss.previousTask));
-    dword scnum = state->tss.eax;
+    Task* state = getTask(ss->previousTask);
+    dword scnum = state->tss->eax;
     SyscallHandler f;
 
     if(scnum<16 && (f = syscalls[scnum]) != 0) 
@@ -14,23 +19,27 @@ void handleSyscalls() {
     else
       printf("Unhandled syscall %d\n",scnum);
 
+    DESCRIPTOR_AT(gdt,ss->previousTask) = tssDesc(state->tss,state->univ->dpl,1);
+    flushGDT();
+
     asm __volatile__ ( "iret" );
   }
 }
 static void initialize() {
   require(&_schedule_);
-  
-  Task* systss = newTask();
-  systss->tss = tss(kernelSpace.pageDir,0,0,0,0,0,0);
-  systss->tss.eip = handleSyscalls;
-  systss->tss.esp = SYS_STACK;
-  
+  require(&_irqs_);
+
   syscalls[SYS_WARP] = sys_warp;
   syscalls[SYS_SPAWN] = sys_spawn;
   syscalls[SYS_DIE] = sys_die;
+  syscalls[SYS_ALLOC] = sys_alloc;
 
-  Selector sysdesc = addDesc(&gdt,tssDesc(systss,0,0));
-  idts[48] = taskGate(sysdesc,0);
+  TSS* systss = SYS_STACK - sizeof(TSS);
+  *systss = tss(kernelSpace.pageDir,handleSyscalls,SYS_STACK - sizeof(TSS));
+  sysGate = addDesc(&gdt,tssDesc(systss,0,0));
+
+  flushGDT();
+  idts[48] = taskGate(sysGate,0);
 }
 Feature _syscalls_ = {
   .state = DISABLED,

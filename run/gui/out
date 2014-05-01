@@ -30,7 +30,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe 
-00000000000i[MEM0 ] allocated memory at 0x7f2147c3d010. after alignment, vector=0x7f2147c3e000
+00000000000i[MEM0 ] allocated memory at 0x7fe1c5b61010. after alignment, vector=0x7fe1c5b62000
 00000000000i[MEM0 ] 32.00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('build/bios/BIOS-bochs-latest')
@@ -40,7 +40,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Mon Apr 28 18:55:49 2014 (time0=1398704149)
+00000000000i[CMOS ] Setting initial clock to: Wed Apr 30 13:06:54 2014 (time0=1398856014)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -181,55 +181,55 @@
 00001600003i[XGUI ] charmap update. Font Height is 16
 00017571508i[BIOS ] ata0-0: PCHS=8/1/16 translation=none LCHS=8/1/16
 00021414375i[BIOS ] IDE time out
-00033408394i[BIOS ] Booting from 0000:7c00
-00033476528i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
-00033478832i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
-00033481136i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
-00033483440i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
-00033485744i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
-00033488048i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
-00033490352i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
-00033492656i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
-00033494960i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
-00033497264i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
-00033499568i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
-00033501872i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
-00033504176i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
-00033506480i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
-00033508784i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
-00033511088i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
-00033513392i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
-00033515696i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
-00033518000i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
-00033520304i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
-00033522608i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
-00033524912i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
-00033527216i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
-00033529520i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
-00033531824i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
-00033534128i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
-00033536432i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
-00033538736i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
-00033541040i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
-00033543344i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
-00068576000p[XGUI ] >>PANIC<< POWER button turned off.
-00068576000i[CPU0 ] CPU is in protected mode (active)
-00068576000i[CPU0 ] CS.mode = 32 bit
-00068576000i[CPU0 ] SS.mode = 32 bit
-00068576000i[CPU0 ] EFER   = 0x00000000
-00068576000i[CPU0 ] | EAX=00000000  EBX=0000fef8  ECX=00000220  EDX=00003002
-00068576000i[CPU0 ] | ESP=0000fee0  EBP=0000feec  ESI=000e0000  EDI=00001080
-00068576000i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf zf af PF cf
-00068576000i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-00068576000i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-00068576000i[CPU0 ] | EIP=0000252c (0000252c)
-00068576000i[CPU0 ] | CR0=0xe0000011 CR2=0x01ffde58
-00068576000i[CPU0 ] | CR3=0x01ffc000 CR4=0x00000010
-00068576000i[CMOS ] Last time is 1398704166 (Mon Apr 28 18:56:06 2014)
-00068576000i[XGUI ] Exit
-00068576000i[CTRL ] quit_sim called with exit code 1
+00033408400i[BIOS ] Booting from 0000:7c00
+00033437870i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
+00033440174i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
+00033442478i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
+00033444782i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
+00033447086i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
+00033449390i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
+00033451694i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
+00033453998i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
+00033456302i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
+00033458606i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
+00033460910i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
+00033463214i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
+00033465518i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
+00033467822i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
+00033470126i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
+00033472430i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
+00033474734i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
+00033477038i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
+00033479342i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
+00033481646i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
+00033483950i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
+00033486254i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
+00033488558i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
+00033490862i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
+00033493166i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
+00033495470i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
+00033497774i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
+00033500078i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
+00033502382i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
+00033504686i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
+00228080000p[XGUI ] >>PANIC<< POWER button turned off.
+00228080000i[CPU0 ] CPU is in protected mode (active)
+00228080000i[CPU0 ] CS.mode = 32 bit
+00228080000i[CPU0 ] SS.mode = 32 bit
+00228080000i[CPU0 ] EFER   = 0x00000000
+00228080000i[CPU0 ] | EAX=000006e0  EBX=fffeff50  ECX=000003d5  EDX=000003d5
+00228080000i[CPU0 ] | ESP=fffeff38  EBP=fffeff44  ESI=000e0000  EDI=00001080
+00228080000i[CPU0 ] | IOPL=1 id vip vif ac vm rf nt of df if tf SF zf af PF cf
+00228080000i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+00228080000i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+00228080000i[CPU0 ] | EIP=00002432 (00002432)
+00228080000i[CPU0 ] | CR0=0xe0000019 CR2=0xffff0000
+00228080000i[CPU0 ] | CR3=0x01ffb000 CR4=0x00000010
+00228080000i[CMOS ] Last time is 1398856071 (Wed Apr 30 13:07:51 2014)
+00228080000i[XGUI ] Exit
+00228080000i[CTRL ] quit_sim called with exit code 1

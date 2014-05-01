@@ -1,0 +1,3 @@
+#!/bin/bash
+src="$1"
+pandoc --from markdown --to html --css style.css "$1"

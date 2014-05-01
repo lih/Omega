@@ -10,29 +10,20 @@
 #define STACK_START(slot) (-((1+(slot))*STACK_SIZE))
 #define STACK_PAGE(s,i) (s-(i+1)*PAGE_SIZE)
 
-
 typedef struct Task {
-  TSS tss;
-  /* Additional fields needed to identify tasks */
-  struct RR* rr;
-} PACKED Task;
-typedef struct RR {
-  struct RR* next;
-  struct RR* prev;
-  Task* task;
+  struct Task* next;
+  struct Task* prev;
+  TSS* tss;
   Universe* univ;
   int slot;
-} RR;
+} Task;
 
 extern Feature _schedule_;
-
-extern int timerPhase;
-extern int seconds,millis;
+extern Task task_root;
 
 extern Selector scheduleGate;
 
-Task* newTask();
-Task* getTask();
+Task* getTask(Selector gate);
 
 void setTimerFreq(int hz);
 

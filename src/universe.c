@@ -15,7 +15,7 @@
 #define F_ADDR(n) ((DirEntry*)(((dword)n)&0xfffffc00))
 
 #define PD_FLAGS (F_PRESENT | F_RW | F_USER)
-#define PT_FLAGS (F_PRESENT | F_RW | F_USER)
+#define PT_FLAGS(rw) (F_PRESENT | ((rw)? F_RW:0) | F_USER)
 
 Dir* pageCounters;
 Universe kernelSpace;
@@ -42,15 +42,9 @@ DirEntry* dirVal(Dir* dir,dword vpage) {
   word pageind = (vpage >> 12) & 0x3ff;
   DirEntry* pgDir = (*dir) + dirind;
 
-  if(*pgDir == 0) {
-    DirEntry* newTbl = allocatePage();
-    int i;
-    for(i=0;i<DIR_SIZE;i++)
-      newTbl[i] = 0;
+  if(*pgDir == 0)
+    *pgDir = ((dword)newDir()) | PD_FLAGS;
     
-    *pgDir = ((dword)newTbl) | PD_FLAGS;
-  }
-  
   return F_ADDR(*pgDir) + pageind;
 }
 static void initUniverse() {
@@ -61,8 +55,10 @@ static void initUniverse() {
   Dir* pgDir = newDir();
   
   dword i;
-  for(i=0;i<DIR_SIZE;i++)
+  for(i=0;i<DIR_SIZE - 8;i++)
     (*pgDir)[i] = (i << 22) | F_PRESENT | F_RW | F_4M;
+  for(;i<DIR_SIZE;i++)
+    (*pgDir)[i] = 0;
   
   kernelSpace.pageDir = pgDir;
 
@@ -74,7 +70,7 @@ Feature _universe_ = {
   .label = "universe",
   .initialize = &initUniverse
 };
-void mapPage(Universe* univ,dword vpage,void* page) {
+void mapPage(Universe* univ,dword vpage,void* page,byte rw) {
   Dir* pgDir = univ->pageDir;
   DirEntry* oldmap = dirVal(pgDir,vpage);
   
@@ -94,7 +90,7 @@ void mapPage(Universe* univ,dword vpage,void* page) {
   else {
     DirEntry* counter = dirVal(pageCounters,page);
 
-    *oldmap = (dword)page | PT_FLAGS;
+    *oldmap = (dword)page | PT_FLAGS(rw);
     (*counter)++;
   }
 }

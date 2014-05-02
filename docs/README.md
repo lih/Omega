@@ -86,7 +86,6 @@ Omega is not still finished yet, as some features announced above
 have not yet been implemented. They will be in the coming times, but for
 now they are listed here : 
 
-  * Synchronization primitives, since this will be a multithreaded kernel
   * Perhaps a small filesystem driver to bootstrap the first few universes
   * Perhaps even a small TFTP and NIC driver for booting over PXE
 

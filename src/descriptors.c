@@ -20,7 +20,7 @@ TSS tss(Dir* pageDir,dword eip,dword esp) {
   TSS ret = {
     .eflags = { 
       ._one = 1, ._zero = 0, ._zero2 = 0, ._zero3 = 0, ._zero4 = 0,
-      ._if = 1, .iopl = 0
+      ._if = 0, .iopl = 0
     },
     .cs = CODE_SEGMENT, .ds = DATA_SEGMENT, .es = DATA_SEGMENT,
     .fs = DATA_SEGMENT, .gs = DATA_SEGMENT, .ss = DATA_SEGMENT,
@@ -33,7 +33,7 @@ TSS tss(Dir* pageDir,dword eip,dword esp) {
   return ret;
 }
 
-Descriptor tssDesc(TSS* tss,byte dpl,byte busy) {
+Descriptor tssDesc(TSS* tss,byte busy) {
   dword base = tss;
   Descriptor ret = {
     .limit_lo = sizeof(TSS)-1,
@@ -41,7 +41,7 @@ Descriptor tssDesc(TSS* tss,byte dpl,byte busy) {
     .base_mi = base >> 16,
     .type = 9 | (busy?2:0),
     .codeOrData = 0,
-    .dpl = dpl,
+    .dpl = 0,
     .present = 1,
     .limit_hi = 0,
     .code64 = 0,

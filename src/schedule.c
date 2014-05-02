@@ -15,32 +15,50 @@ Selector scheduleGate,slaveGate;
 
 Dir* taskDirectory;
   
-Universe rootSpace;
-Task task_root = {
-  .next = &task_root,
-  .prev = &task_root,
-  .univ = &rootSpace,
+Task activeRoot = {
+  .next = &activeRoot,
+  .prev = &activeRoot,
+  .univ = &kernelSpace,
   .tss = KERNEL_STACK,
   .slot = 0
+};
+Task pendingRoot = {
+  .next = &pendingRoot,
+  .prev = &pendingRoot
+};
+Task waitingRoot = {
+  .next = &waitingRoot,
+  .prev = &waitingRoot
 };
 
 void schedule();
 void yield();
+
+void detachTask(Task* t) {
+  t->next->prev = t->prev;
+  t->prev->next = t->next;
+}
+void insertTask(Task* a,Task* b) {
+  a->prev = b->prev;
+  a->next = b;
+  a->next->prev = a;
+  a->prev->next = a;
+}
 
 static void initSchedule() {
   require(&_memory_);
   require(&_universe_);
 
   taskDirectory = newDir();
-  *dirVal(taskDirectory,task_root.tss) = &task_root;
-  slaveGate = addDesc(&gdt,tssDesc(task_root.tss,0,0));
-  *(task_root.tss) = tss(kernelSpace.pageDir,0,0);
+  *dirVal(taskDirectory,activeRoot.tss) = &activeRoot;
+  slaveGate = addDesc(&gdt,tssDesc(activeRoot.tss,0));
+  *(activeRoot.tss) = tss(kernelSpace.pageDir,0,0);
 
   Task* scheduleTask = poolAlloc(&taskPool);
 
   scheduleTask->tss = INT_STACK - sizeof(TSS);
   *(scheduleTask->tss) = tss(kernelSpace.pageDir,schedule,INT_STACK - sizeof(TSS));
-  scheduleGate = addDesc(&gdt,tssDesc(scheduleTask->tss,0,0));
+  scheduleGate = addDesc(&gdt,tssDesc(scheduleTask->tss,0));
   
   flushGDT();
 
@@ -52,17 +70,11 @@ Feature _schedule_ = {
   .initialize = &initSchedule
 };
 
-void yield(Task* task) {
-  if(task != &task_root) {
-    /* detach current timeline */
-    task->prev->next = task->next;
-    task->next->prev = task->prev;
-
-    /* reattach it last on the round robin */
-    task->next = &task_root;
-    task->prev = task_root.prev;
-    task->prev->next = task;
-    task->next->prev = task;
+void yield() {
+  if(activeRoot.next != &activeRoot) {
+    Task* t = activeRoot.next;
+    detachTask(t);
+    insertTask(t,&activeRoot);
   }
 }
 void schedule() {
@@ -76,12 +88,22 @@ void schedule() {
       seconds++;
       /* printf("Second %d\n",seconds); */
     }
+    Task* cur = waitingRoot.next;
+    Task* next;
+    while(cur != &waitingRoot) {
+      next = cur->next;
+      if(cur->timerSecs < seconds || 
+	 (cur->timerSecs == seconds && cur->timerMillis < millis)) {
+	detachTask(cur);
+	insertTask(cur,&activeRoot);
+      }
+      cur = next;
+    }
 
-    Task* t = getTask(ss->previousTask);
-    if(!IS(t,NULL)) yield(t);
+    yield();
     
-    Task* curTask = task_root.next;
-    DESCRIPTOR_AT(gdt,ss->previousTask) = tssDesc(curTask->tss,curTask->univ->dpl,1);
+    cur = activeRoot.next;
+    DESCRIPTOR_AT(gdt,ss->previousTask) = tssDesc(cur->tss,1);
     flushGDT();
 
     /* printf("Schedule at eip=%x esp=%x tss=%x cr3=%x\n" */
@@ -108,13 +130,28 @@ int findNextSlot() {
 
   return curSlot;
 }
+Universe* univAt(Task* t,int index) {
+  switch(index) {
+  case -2:
+    return t->from;
+  case -1:
+    return t->univ;
+  }
 
-/*
-  Spawns a new timeline on the current universe
-  where eip = eax.
- */
-void sys_spawn(Task* task) {
-  Universe* univ = task->tss->ebx;
+  Universe* end = t->univ->down;
+  Universe* cur = end->right;
+  while(cur != end) {
+    if(cur->index == index)
+      return cur;
+    cur = cur->right;
+  }
+
+  printf("Unknown universe %d\n",index);
+  return NULL;
+}
+
+void sys_spark(Task* task) {
+  Universe* univ = univAt(task,task->tss->ebx);
   dword eip = task->tss->ecx;
 
   int slot = findNextSlot();
@@ -124,30 +161,23 @@ void sys_spawn(Task* task) {
   for(i=0;i<STACK_PAGES;i++) {
     void* pg = allocatePage();
     mapPage(univ,STACK_PAGE(vaddr,i),pg,1);
-    mapPage(&kernelSpace,STACK_PAGE(vaddr,i),pg,0);
+    mapPage(&kernelSpace,STACK_PAGE(vaddr,i),pg,1);
   }
   
   Task* newtask = poolAlloc(&taskPool); {
     newtask->tss = vaddr-sizeof(TSS);
     *(newtask->tss) = tss(univ->pageDir,eip,vaddr-sizeof(TSS));
-    newtask->tss->eflags.iopl = 1;
+    newtask->tss->eflags._if = 1;
+    newtask->tss->eflags.iopl = univ->dpl;
     *dirVal(taskDirectory,newtask->tss) = newtask;
 
-    newtask->next = task_root.next;
-    task_root.next = newtask;
-    newtask->prev = &task_root;
+    insertTask(newtask,&activeRoot);
     newtask->slot = slot;
     newtask->univ = univ;
   }
-
-  task->tss->eax = newtask;
 }
-/*
-  Ends the current timeline.
- */
 void sys_die(Task* task) {
-  task->next->prev = task->prev;
-  task->prev->next = task->next;
+  detachTask(task);
 
   int i; dword start = STACK_START(task->slot);
   for(i=0;i<STACK_PAGES;i++)
@@ -156,15 +186,9 @@ void sys_die(Task* task) {
   stackSlots[task->slot] = 0;
 
   poolFree(&taskPool,task);
-  poolFree(&taskPool,task);
 }
-/*
-  Warps the current timeline to another universe,
-  where universe descriptor = ebx
-    and eip = ecx
- */
 void sys_warp(Task* task) {
-  Universe* u = task->tss->ebx;
+  Universe* u = univAt(task,task->tss->ebx);
   dword eip = task->tss->ecx;
   dword start = STACK_START(task->slot);
 
@@ -179,5 +203,94 @@ void sys_warp(Task* task) {
   task->tss->eip = eip;
   task->tss->esp = start;
   task->tss->cr3 = u->pageDir;
+  task->tss->eflags.iopl = u->dpl;
+  task->from = task->univ;
   task->univ = u;
+}
+void sys_acquire(Task* task) {
+  dword vaddr = task->tss->ebx;
+
+  DirEntry* d = dirVal(task->univ->pageDir,vaddr);
+  byte* paddr = ((dword)F_ADDR(*d)) | (vaddr & 0xfff);
+
+  if(*paddr == 0) {
+    task->sem = paddr;
+  
+    detachTask(task);
+    insertTask(task,pendingRoot.next);
+  }
+  else
+    (*paddr)--;
+}
+void sys_release(Task* task) {
+  dword vaddr = task->tss->ebx;
+  int n = task->tss->ecx;
+
+  DirEntry* d = dirVal(task->univ->pageDir,vaddr);
+  byte* paddr = ((void*)F_ADDR(*d)) + (vaddr & 0xfff);
+
+  Task* curTask = pendingRoot.next;
+  while(curTask != &pendingRoot) {
+    if(curTask->sem == paddr) {
+      Task* next = curTask->next;
+      detachTask(curTask);
+      insertTask(curTask,&activeRoot);
+      curTask->tss->eax = *paddr + n;
+      n--;
+      if(n == 0)
+	break;
+      curTask = next;
+    }
+    else
+      curTask = curTask->next;
+  }
+  *paddr += n;
+}
+void sys_mapTo(Task* task) {
+  Universe* dest = univAt(task,task->tss->ebx);
+  dword from = task->tss->ecx;
+  dword to = task->tss->edx;
+
+  if(!IS(dest,NULL)) {
+    DirEntry* d = dirVal(task->univ->pageDir,from);
+    void* paddr = F_ADDR(*d);
+  
+    mapPage(dest,to,paddr,1);
+  }
+}
+void sys_mapFrom(Task* task) {
+  Universe* dest = univAt(task,task->tss->ebx);
+  dword from = task->tss->ecx;
+  dword to = task->tss->edx;
+
+  if(!IS(dest,NULL)) {
+    DirEntry* d = dirVal(dest->pageDir,from);
+    void* paddr = F_ADDR(*d);
+    
+    mapPage(task->univ,to,paddr,1);
+  }
+}
+void sys_spawn(Task* t) {
+  Universe* u = newUniverse(t->univ);
+
+  t->tss->eax = u->index;
+}
+void sys_anihilate(Task* t) {
+  Universe* u = univAt(t,t->tss->ebx);
+
+  freeUniverse(u);
+}
+void sys_wait(Task* task) {
+  int secs = task->tss->ebx,
+    ms = task->tss->ecx;
+  
+  detachTask(task);
+  insertTask(task,&waitingRoot);
+
+  task->timerSecs = secs + seconds;
+  task->timerMillis = millis + (ms*FREQUENCY)/1000;
+  if(task->timerMillis >= FREQUENCY) {
+    task->timerSecs ++;
+    task->timerMillis -= FREQUENCY;
+  }
 }

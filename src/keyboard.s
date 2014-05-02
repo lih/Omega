@@ -1,9 +1,9 @@
 global handleKeyboard
 extern handleKey
 
-handleKeyboard:
 	cli
 
+handleKeyboard:
 	mov dx,60h
 	in al,dx
 	movzx eax,al

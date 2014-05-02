@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "universe.h"
 #include "schedule.h"
+#include "framebuffer.h"
 
 #define F_PRESENT 1
 #define F_RW      2
@@ -12,13 +13,16 @@
 #define F_4M      128 		/* 4M pages instead of 4k */
 #define F_GLOBAL  256
 
-#define F_ADDR(n) ((DirEntry*)(((dword)n)&0xfffffc00))
-
 #define PD_FLAGS (F_PRESENT | F_RW | F_USER)
 #define PT_FLAGS(rw) (F_PRESENT | ((rw)? F_RW:0) | F_USER)
 
 Dir* pageCounters;
-Universe kernelSpace;
+Universe kernelSpace = {
+  .dpl = 0,
+  .up = 0,
+  .left = &kernelSpace,
+  .right = &kernelSpace
+};
 Pool univPool = { NULL, sizeof(Universe) };
 
 Dir* newDir() {
@@ -28,13 +32,59 @@ Dir* newDir() {
     (*ret)[i] = NULL;
   return ret;
 }
-Universe* newUniverse() {
+void freeDir(Dir* d) {
+  int i;
+  for(i=0;i<DIR_SIZE;i++) {
+    void* pg = F_ADDR((*d)[i]);
+    if(pg != 0) freePage(pg);
+  }
+  freePage(*d);
+}
+
+Universe* newUniverse(Universe* father) {
   require(&_memory_);
   
   Universe* ret = poolAlloc(&univPool);
-  ret->pageDir = newDir();
-  
+  SET_STRUCT(Universe,*ret,{
+      .pageDir = newDir(), 
+	.dpl = 0,
+	.index = father->down->index,
+	.up = father,
+	.left = father->down->left, .right = father->down,
+	.down = poolAlloc(&univPool)
+	});
+  father->down->index++;
+
+  ret->left->right = ret;
+  ret->right->left = ret;
+
+  ret->down->right = ret->down;
+  ret->down->left = ret->down;
+  ret->down->index = 0;
+
   return ret;
+}
+void freeUniverse(Universe* u) {
+  Universe* fence = u->down;
+  while(fence->right != fence)
+    freeUniverse(fence->right);
+  poolFree(&univPool,fence);
+
+  Task* roots[3] = { &activeRoot, &pendingRoot, &waitingRoot };
+  int i;
+  for(i=0;i<3;i++) {
+    Task* cur = roots[i]->next;
+    Task* next;
+    while(cur != roots[i]) {
+      next = cur->next;
+      if(cur->univ == u) 
+	sys_die(cur);
+      cur = next;
+    }
+  }
+
+  freeDir(u->pageDir);
+  poolFree(&univPool,u);
 }
 
 DirEntry* dirVal(Dir* dir,dword vpage) {
@@ -61,7 +111,11 @@ static void initUniverse() {
     (*pgDir)[i] = 0;
   
   kernelSpace.pageDir = pgDir;
-
+  kernelSpace.down = poolAlloc(&univPool);
+  kernelSpace.down->index = 0;
+  kernelSpace.down->right = kernelSpace.down;
+  kernelSpace.down->left = kernelSpace.down;
+  
   setPageDirectory(kernelSpace.pageDir);
   enablePaging();
 }

@@ -21,5 +21,6 @@ word	inportw(word _port);
 void	outportw(word _port,word _msg);
 
 void    flushGDT();
+void    getPL();
 
 #endif

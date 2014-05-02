@@ -78,7 +78,7 @@ extern Descriptor idts[256];
 Selector addDesc(TablePtr* tbl,Descriptor desc);
 void*    descBase(Descriptor desc);
 
-Descriptor tssDesc(TSS* tss,byte dpl,byte busy);
+Descriptor tssDesc(TSS* tss,byte busy);
 Descriptor taskGate(Selector tssSel,byte dpl);
 Descriptor interruptGate(Selector sel,void* offset,byte dpl);
 

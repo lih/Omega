@@ -1,15 +1,12 @@
 #include "constants.h"
-#include "memory.h"
 #include "framebuffer.h"
-#include "interrupt.h"
 #include "keyboard.h"
-#include "universe.h"
-#include "schedule.h"
-#include "pervasives.h"
 #include "acpi.h"
 #include "feature.h"
 #include "timer.h"
 #include "process.h"
+#include "syscall.h"
+#include "init.h"
 
 int running = 0; 
 
@@ -24,24 +21,19 @@ void main () {
   RED printf("Initializing Omega: \n");
 
   GREEN;
-  require(&_timer_);
   require(&_keyboard_);
   require(&_acpi_);
   require(&_process_);
+  require(&_timer_);
 
   RED printf("The system is operational ! (Press Ctrl+Alt+Escape to shutdown)\n");
 
   CLEAR;
 
   enableInterrupts();
+  syscall_spark(initUniv->index,&init);
 
-  running = 1;
-  while(running) {
-    nop();
-  }
-
-  printf("Shutting down Omega after %d seconds %d milliseconds...\n",seconds,millis);
-  shutdown();
+  while(1) nop();
 }
 
 

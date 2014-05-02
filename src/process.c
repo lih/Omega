@@ -4,24 +4,19 @@
 #include "syscall.h"
 #include "framebuffer.h"
 #include "interrupt.h"
+#include "init.h"
 
 Universe* initUniv;
 
-void nop();
-static void main() {
-  printf("Hello from ring 1 !\n");
-  
-  while(1) nop();
-}
 #define MAP_STACK(u,s) mapPage(u,STACK_PAGE(s,0),STACK_PAGE(s,0),0)
 
 static void initialize() {
   require(&_schedule_);
   require(&_syscalls_);
 
-  initUniv = newUniverse();
+  initUniv = newUniverse(&kernelSpace);
 
-  initUniv->dpl = 1;
+  initUniv->dpl = 3;
   void* vpage;
   for(vpage = KERNEL_START & 0xfffff000;vpage < &KERNEL_END;vpage+=PAGE_SIZE)
     mapPage(initUniv,vpage,vpage,1);
@@ -32,8 +27,6 @@ static void initialize() {
   MAP_STACK(initUniv,SYS_STACK);
   MAP_STACK(initUniv,KEY_STACK);
   MAP_STACK(initUniv,IRQ_STACK);
-  
-  syscall_spawn(initUniv,&main);
 }
 Feature _process_ = {
   .state = DISABLED,

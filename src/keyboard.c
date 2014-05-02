@@ -49,9 +49,11 @@ char layout[128] = {
 };
 
 static void initKeyboard() {
+  require(&_universe_);
+
   TSS* keyTSS = KEY_STACK-sizeof(TSS);
   *keyTSS = tss(kernelSpace.pageDir,handleKeyboard,KEY_STACK-sizeof(TSS));
-  keyboardGate = addDesc(&gdt,tssDesc(keyTSS,0,0));
+  keyboardGate = addDesc(&gdt,tssDesc(keyTSS,0));
 }
 Feature _keyboard_ = {
   .state = DISABLED,

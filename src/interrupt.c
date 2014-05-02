@@ -40,7 +40,6 @@ char* descriptions[32] = {
   ,"Reserved"
 };
 IDTHandler irqs[16] = { 0 };
-SyscallHandler syscalls[16] = { 0 };
 
 static void initInterrupts() {
   require(&_exceptions_);
@@ -76,7 +75,7 @@ static void initExceptions() {
 
   TSS* t = EXC_STACK - sizeof(TSS);
   *t = tss(kernelSpace.pageDir,unhandledException,EXC_STACK - sizeof(TSS));
-  Selector excGate = addDesc(&gdt,tssDesc(t,0,0));
+  Selector excGate = addDesc(&gdt,tssDesc(t,0));
   
   int i;
   for(i=0;i<32;i++)
@@ -96,7 +95,6 @@ void handleException() {
 void unhandledIRQ() {
   TSS* ss = TSS_AT(getTaskRegister());
   while(1) {
-    disableInterrupts();
     TSS* t = TSS_AT(ss->previousTask);
 
     asm __volatile__ ( "iret" );
@@ -110,7 +108,7 @@ static void initIRQs() {
 
   TSS* irqTSS = IRQ_STACK - sizeof(TSS);
   *irqTSS = tss(kernelSpace.pageDir,unhandledIRQ,IRQ_STACK - sizeof(TSS));
-  Selector irqGate = addDesc(&gdt,tssDesc(irqTSS,0,0));
+  Selector irqGate = addDesc(&gdt,tssDesc(irqTSS,0));
 
   idts[32] = taskGate(scheduleGate,0);
   idts[33] = taskGate(keyboardGate,0);
@@ -137,7 +135,9 @@ Feature _irqs_ = {
 
 void sys_alloc(struct Task* t) {
   dword vpage = t->tss->ebx;
-  void* newPage = allocatePage();
+  int n = t->tss->ecx;
 
-  mapPage(t->univ,vpage,newPage,1);
+  int i;
+  for(i=0;i<n;i++)
+    mapPage(t->univ,vpage+(i*PAGE_SIZE),allocatePage(),1);
 }

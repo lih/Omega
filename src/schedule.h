@@ -15,11 +15,14 @@ typedef struct Task {
   struct Task* prev;
   TSS* tss;
   Universe* univ;
+  Universe* from;
   int slot;
+  byte* sem;
+  int timerSecs, timerMillis;
 } Task;
 
 extern Feature _schedule_;
-extern Task task_root;
+extern Task activeRoot,pendingRoot,waitingRoot;
 
 extern Selector scheduleGate;
 

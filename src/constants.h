@@ -24,9 +24,17 @@
 #define TIMER_FREQ 256
 
 #define SYS_DIE 0
-#define SYS_SPAWN 1
+#define SYS_SPARK 1
 #define SYS_ALLOC 2
-#define SYS_WARP 3
+#define SYS_ACQUIRE 3
+#define SYS_RELEASE 4
+#define SYS_MAPTO 5
+#define SYS_MAPFROM 6
+#define SYS_WARP 7
+#define SYS_SPAWN 8
+#define SYS_ANIHILATE 9
+#define SYS_WAIT 10
+#define SYS_COUNT 11
 
 extern void KERNEL_END;
 extern int const KERNEL_SIZE;

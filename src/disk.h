@@ -3,6 +3,6 @@
 
 #include "memory.h"
 
-ata_read(word* dest,dword nb_words,dword lba);
+void ata_read(word* dest,dword nb_words,dword lba);
 
 #endif

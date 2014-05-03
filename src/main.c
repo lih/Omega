@@ -7,6 +7,7 @@
 #include "process.h"
 #include "syscall.h"
 #include "init.h"
+#include "vga.h"
 
 int running = 0; 
 
@@ -25,6 +26,7 @@ void main () {
   require(&_acpi_);
   require(&_process_);
   require(&_timer_);
+  require(&_vga_);
 
   RED printf("The system is operational ! (Press Ctrl+Alt+Escape to shutdown)\n");
 

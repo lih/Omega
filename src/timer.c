@@ -18,7 +18,7 @@ static void initialize() {
   require(&_interrupts_);
   
   setTimerFreq(TIMER_FREQ);
-  padLine(); printf("Set timer frequency to %dHz\n",TIMER_FREQ);
+  PAD printf("Set timer frequency to %dHz\n",TIMER_FREQ);
 }
 Feature _timer_ = {
   .state = DISABLED,

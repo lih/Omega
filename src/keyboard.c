@@ -2,6 +2,7 @@
 #include "pervasives.h"
 #include "interrupt.h"
 #include "descriptors.h"
+#include "vga.h"
 
 Selector keyboardGate;
 
@@ -85,6 +86,8 @@ void handleKey(byte scan) {
     case 27: /* ESCAPE */
       if(ctrl && alt)
 	shutdown();
+      if(ctrl)
+	switchMode();
       break;
       
     default:

@@ -11,7 +11,7 @@
 #define KEY_STACK    0x14000
 #define EXC_STACK    0x15000
 #define IRQ_STACK    0x16000
-#define HEAP_START   0x16000
+#define HEAP_START   0x100000
 
 #define SMAP_MAGIC   0x534D4150
 #define PAGE_SIZE    0x1000

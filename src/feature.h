@@ -9,6 +9,8 @@ typedef struct {
   void (*initialize)();
 } Feature;
 
+#define PAD padLine();
+
 void require(Feature* f);
 void padLine();
 

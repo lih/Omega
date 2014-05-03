@@ -50,8 +50,7 @@ static void initialize() {
     }
   }
 
-  padLine();
-  printf("Detected %d bytes of memory spread across %d pages\n",page_count*PAGE_SIZE,page_count);
+  PAD printf("Detected %d bytes of memory spread across %d pages\n",page_count*PAGE_SIZE,page_count);
 }
 Feature _memory_ = {
   .state = DISABLED,

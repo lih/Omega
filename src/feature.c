@@ -21,7 +21,7 @@ void require(Feature* feature) {
     featureDepth++;
     feature->initialize();
     featureDepth--;
-    padLine(); printf("Initialized %s\n",feature->label);
+    PAD printf("Initialized %s\n",feature->label);
     feature->state = ENABLED;
     break;
   }

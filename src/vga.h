@@ -8,4 +8,6 @@
 
 extern Feature _vga_;
 
+void switchMode();
+
 #endif

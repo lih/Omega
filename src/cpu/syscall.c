@@ -32,9 +32,7 @@ void handleSyscalls() {
     else
       printf("Unhandled syscall %d\n",scnum);
 
-    Task* next = activeRoot.next;
-    DESCRIPTOR_AT(gdt,ss->previousTask) = tssDesc(next->tss,1);
-    flushGDT();
+    scheduleNext(ss);
 
     asm __volatile__ ( "iret" );
   }

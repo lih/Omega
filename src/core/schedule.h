@@ -35,6 +35,7 @@ extern Selector scheduleGate;
 
 Task* getTask(Selector gate);
 
+void scheduleNext(TSS* cur);
 void releaseSem(Semaphore*,int);
 void setTimerFreq(int hz);
 

@@ -1,6 +1,6 @@
 00000000000i[     ] Bochs x86 Emulator 2.6
 00000000000i[     ]   Built from SVN snapshot on September 2nd, 2012
-00000000000i[     ] Compiled on Apr 28 2014 at 18:39:08
+00000000000i[     ] Compiled on Apr 28 2014 at 11:38:00
 00000000000i[     ] System configuration
 00000000000i[     ]   processors: 1 (cores=1, HT threads=1)
 00000000000i[     ]   A20 line support: yes
@@ -30,8 +30,8 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe 
-00000000000i[MEM0 ] allocated memory at 0x7f923b6aa010. after alignment, vector=0x7f923b6ab000
-00000000000i[MEM0 ] 32.00MB
+00000000000i[MEM0 ] allocated memory at 0x2b252948d010. after alignment, vector=0x2b252948e000
+00000000000i[MEM0 ] 32,00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('build/bios/BIOS-bochs-latest')
 00000000000i[VTIME] using 'realtime pit' synchronization method
@@ -41,7 +41,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Mon May  5 08:29:33 2014 (time0=1399271373)
+00000000000i[CMOS ] Setting initial clock to: Mon May  5 10:27:22 2014 (time0=1399278442)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -150,89 +150,88 @@
 00000322242i[BIOS ] Shutdown flag 0
 00000322837i[BIOS ] ram_size=0x02000000
 00000323258i[BIOS ] ram_end=32MB
-00000335803i[BIOS ] Found 1 cpu(s)
-00000349985i[BIOS ] bios_table_addr: 0x000fa438 end=0x000fcc00
-00000677778i[PCI  ] 440FX PMC write to PAM register 59 (TLB Flush)
-00001005706i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
-00001005725i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
-00001005744i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
-00001005763i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
-00001005773i[P2I  ] write: ELCR2 = 0x0a
-00001006539i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
-00001014204i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
-00001016474i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
-00001018583i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
-00001018814i[PIDE ] new BM-DMA address: 0xc000
-00001019431i[BIOS ] region 4: 0x0000c000
-00001021456i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
-00001021689i[ACPI ] new irq line = 11
-00001021701i[ACPI ] new irq line = 9
-00001021730i[ACPI ] new PM base address: 0xb000
-00001021744i[ACPI ] new SM base address: 0xb100
-00001021772i[PCI  ] setting SMRAM control register to 0x4a
-00001185863i[CPU0 ] Enter to System Management Mode
-00001185874i[CPU0 ] RSM: Resuming from System Management Mode
-00001349892i[PCI  ] setting SMRAM control register to 0x0a
-00001364785i[BIOS ] MP table addr=0x000fa510 MPC table addr=0x000fa440 size=0xc8
-00001366541i[BIOS ] SMBIOS table addr=0x000fa520
-00001366599i[MEM0 ] allocate_block: block=0x1f used 0x2 of 0x20
-00001368736i[BIOS ] ACPI tables: RSDP addr=0x000fa640 ACPI DATA addr=0x01ff0000 size=0x992
-00001371933i[BIOS ] Firmware waking vector 0x1ff00cc
-00001373354i[PCI  ] 440FX PMC write to PAM register 59 (TLB Flush)
-00001374082i[BIOS ] bios_table_cur_addr: 0x000fa664
-00001684599i[XGUI ] charmap update. Font Height is 16
-00017514391i[BIOS ] ata0-0: PCHS=8/1/16 translation=none LCHS=8/1/16
-00021356936i[BIOS ] IDE time out
-02963841291i[BIOS ] Booting from 0000:7c00
-02963870603i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
-02963872907i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
-02963875211i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
-02963877515i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
-02963879819i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
-02963882123i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
-02963884427i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
-02963886731i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
-02963889035i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
-02963891339i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
-02963893643i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
-02963895947i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
-02963898251i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
-02963900555i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
-02963902859i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
-02963905163i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
-02963907467i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
-02963909771i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
-02963912075i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
-02963914379i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
-02963916683i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
-02963918987i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
-02963921291i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
-02963923595i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
-02963925899i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
-02963928203i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
-02963930507i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
-02963932811i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
-02963935115i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
-02963937419i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
-03095760000e[XGUI ] xkeypress(): keysym 1008fe01 unhandled!
-03298349031p[ACPI ] >>PANIC<< ACPI control: soft power off
-03298349031i[CPU0 ] CPU is in protected mode (active)
-03298349031i[CPU0 ] CS.mode = 32 bit
-03298349031i[CPU0 ] SS.mode = 32 bit
-03298349031i[CPU0 ] EFER   = 0x00000000
-03298349031i[CPU0 ] | EAX=00002000  EBX=000012ac  ECX=00000001  EDX=0000b004
-03298349031i[CPU0 ] | ESP=00013f68  EBP=00013f84  ESI=00000000  EDI=00000000
-03298349031i[CPU0 ] | IOPL=0 id vip vif ac vm rf NT of df if tf sf zf af PF cf
-03298349031i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-03298349031i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-03298349031i[CPU0 ] | EIP=00001c8d (00001c8b)
-03298349031i[CPU0 ] | CR0=0xe0000019 CR2=0x00000000
-03298349031i[CPU0 ] | CR3=0x01ffe000 CR4=0x00000010
-03298349031i[CMOS ] Last time is 1399272197 (Mon May  5 08:43:17 2014)
-03298349031i[XGUI ] Exit
-03298349031i[CTRL ] quit_sim called with exit code 1
+00000335815i[BIOS ] Found 1 cpu(s)
+00000349997i[BIOS ] bios_table_addr: 0x000fa438 end=0x000fcc00
+00000677790i[PCI  ] 440FX PMC write to PAM register 59 (TLB Flush)
+00001005718i[P2I  ] PCI IRQ routing: PIRQA# set to 0x0b
+00001005737i[P2I  ] PCI IRQ routing: PIRQB# set to 0x09
+00001005756i[P2I  ] PCI IRQ routing: PIRQC# set to 0x0b
+00001005775i[P2I  ] PCI IRQ routing: PIRQD# set to 0x09
+00001005785i[P2I  ] write: ELCR2 = 0x0a
+00001006551i[BIOS ] PIIX3/PIIX4 init: elcr=00 0a
+00001014216i[BIOS ] PCI: bus=0 devfn=0x00: vendor_id=0x8086 device_id=0x1237 class=0x0600
+00001016486i[BIOS ] PCI: bus=0 devfn=0x08: vendor_id=0x8086 device_id=0x7000 class=0x0601
+00001018595i[BIOS ] PCI: bus=0 devfn=0x09: vendor_id=0x8086 device_id=0x7010 class=0x0101
+00001018826i[PIDE ] new BM-DMA address: 0xc000
+00001019443i[BIOS ] region 4: 0x0000c000
+00001021468i[BIOS ] PCI: bus=0 devfn=0x0b: vendor_id=0x8086 device_id=0x7113 class=0x0680
+00001021701i[ACPI ] new irq line = 11
+00001021713i[ACPI ] new irq line = 9
+00001021742i[ACPI ] new PM base address: 0xb000
+00001021756i[ACPI ] new SM base address: 0xb100
+00001021784i[PCI  ] setting SMRAM control register to 0x4a
+00001185875i[CPU0 ] Enter to System Management Mode
+00001185886i[CPU0 ] RSM: Resuming from System Management Mode
+00001349904i[PCI  ] setting SMRAM control register to 0x0a
+00001364797i[BIOS ] MP table addr=0x000fa510 MPC table addr=0x000fa440 size=0xc8
+00001366553i[BIOS ] SMBIOS table addr=0x000fa520
+00001366611i[MEM0 ] allocate_block: block=0x1f used 0x2 of 0x20
+00001368748i[BIOS ] ACPI tables: RSDP addr=0x000fa640 ACPI DATA addr=0x01ff0000 size=0x992
+00001371945i[BIOS ] Firmware waking vector 0x1ff00cc
+00001373366i[PCI  ] 440FX PMC write to PAM register 59 (TLB Flush)
+00001374094i[BIOS ] bios_table_cur_addr: 0x000fa664
+00002090835i[XGUI ] charmap update. Font Height is 16
+00017514368i[BIOS ] ata0-0: PCHS=8/1/16 translation=none LCHS=8/1/16
+00021356867i[BIOS ] IDE time out
+04196682172i[BIOS ] Booting from 0000:7c00
+04196711402i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
+04196713450i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
+04196715498i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
+04196717546i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
+04196719594i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
+04196721642i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
+04196723690i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
+04196725738i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
+04196727786i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
+04196729834i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
+04196731882i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
+04196733930i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
+04196735978i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
+04196738026i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
+04196740074i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
+04196742122i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
+04196744170i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
+04196746218i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
+04196748266i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
+04196750314i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
+04196752362i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
+04196754410i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
+04196756458i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
+04196758506i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
+04196760554i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
+04196762602i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
+04196764650i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
+04196766698i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
+04196768746i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
+04196770794i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
+08921573030p[ACPI ] >>PANIC<< ACPI control: soft power off
+08921573030i[CPU0 ] CPU is in protected mode (active)
+08921573030i[CPU0 ] CS.mode = 32 bit
+08921573030i[CPU0 ] SS.mode = 32 bit
+08921573030i[CPU0 ] EFER   = 0x00000000
+08921573030i[CPU0 ] | EAX=00002000  EBX=000012ac  ECX=00000001  EDX=0000b004
+08921573030i[CPU0 ] | ESP=00013f68  EBP=00013f84  ESI=00000000  EDI=00000000
+08921573030i[CPU0 ] | IOPL=0 id vip vif ac vm rf NT of df if tf sf zf af PF cf
+08921573030i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+08921573030i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+08921573030i[CPU0 ] | EIP=00002b0e (00002b0c)
+08921573030i[CPU0 ] | CR0=0xe0000019 CR2=0x00000000
+08921573030i[CPU0 ] | CR3=0x01ffe000 CR4=0x00000010
+08921573030i[CMOS ] Last time is 1399280672 (Mon May  5 11:04:32 2014)
+08921573030i[XGUI ] Exit
+08921573030i[CTRL ] quit_sim called with exit code 1

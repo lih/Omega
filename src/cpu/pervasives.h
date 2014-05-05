@@ -23,4 +23,6 @@ void	outportw(word _port,word _msg);
 void    flushGDT();
 void    getPL();
 
+dword compareAndSet(dword* addr,dword val);
+
 #endif

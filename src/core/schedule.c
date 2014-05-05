@@ -32,18 +32,6 @@ Task waitingRoot = {
 };
 
 void schedule();
-void yield();
-
-void detachTask(Task* t) {
-  t->next->prev = t->prev;
-  t->prev->next = t->next;
-}
-void insertTask(Task* a,Task* b) {
-  a->prev = b->prev;
-  a->next = b;
-  a->next->prev = a;
-  a->prev->next = a;
-}
 
 static void initSchedule() {
   require(&_memory_);
@@ -70,12 +58,25 @@ Feature _schedule_ = {
   .initialize = &initSchedule
 };
 
-void yield() {
-  if(activeRoot.next != &activeRoot) {
-    Task* t = activeRoot.next;
-    detachTask(t);
-    insertTask(t,&activeRoot);
-  }
+Task* getTask(Selector gate) {
+  TSS* tss = descBase(DESCRIPTOR_AT(gdt,gate));
+  Task** task = dirVal(taskDirectory,tss);
+  
+  return *task;
+}
+void detachTask(Task* t) {
+  t->next->prev = t->prev;
+  t->prev->next = t->next;
+}
+void insertTask(Task* a,Task* b) {
+  a->prev = b->prev;
+  a->next = b;
+  a->next->prev = a;
+  a->prev->next = a;
+}
+void scheduleNext(TSS* cur) {
+  DESCRIPTOR_AT(gdt,cur->previousTask) = tssDesc(activeRoot.next->tss,1);
+  flushGDT();
 }
 void schedule() {
   require(&_schedule_);
@@ -100,11 +101,13 @@ void schedule() {
       cur = next;
     }
 
-    yield();
-    
-    cur = activeRoot.next;
-    DESCRIPTOR_AT(gdt,ss->previousTask) = tssDesc(cur->tss,1);
-    flushGDT();
+    if(activeRoot.next != &activeRoot) {
+      Task* t = activeRoot.next;
+      detachTask(t);
+      insertTask(t,&activeRoot);
+    }
+
+    scheduleNext(ss);
 
     /* printf("Schedule at eip=%x esp=%x tss=%x cr3=%x\n" */
     /* 	   ,curTask->tss->eip,curTask->tss->esp,curTask->tss,curTask->tss->cr3); */
@@ -112,12 +115,6 @@ void schedule() {
     outportb(0x20, 0x20);
     asm __volatile__ ( "iret" );
   }
-}
-Task* getTask(Selector gate) {
-  TSS* tss = descBase(DESCRIPTOR_AT(gdt,gate));
-  Task** task = dirVal(taskDirectory,tss);
-  
-  return *task;
 }
 
 int findNextSlot() {
@@ -148,6 +145,25 @@ Universe* univAt(Task* t,int index) {
 
   printf("Unknown universe %d\n",index);
   return NULL;
+}
+
+void releaseSem(Semaphore* paddr,int n) {
+  Task* curTask = pendingRoot.next;
+  while(curTask != &pendingRoot) {
+    if(curTask->trig.sem == paddr) {
+      Task* next = curTask->next;
+      detachTask(curTask);
+      insertTask(curTask,&activeRoot);
+      curTask->tss->eax = *paddr + n;
+      n--;
+      if(n == 0)
+	break;
+      curTask = next;
+    }
+    else
+      curTask = curTask->next;
+  }
+  *paddr += n;
 }
 
 void sys_spark(Task* task) {
@@ -223,24 +239,6 @@ void sys_acquire(Task* task) {
     (*paddr)--;
 }
 
-void releaseSem(Semaphore* paddr,int n) {
-  Task* curTask = pendingRoot.next;
-  while(curTask != &pendingRoot) {
-    if(curTask->trig.sem == paddr) {
-      Task* next = curTask->next;
-      detachTask(curTask);
-      insertTask(curTask,&activeRoot);
-      curTask->tss->eax = *paddr + n;
-      n--;
-      if(n == 0)
-	break;
-      curTask = next;
-    }
-    else
-      curTask = curTask->next;
-  }
-  *paddr += n;
-}
 void sys_release(Task* task) {
   dword vaddr = task->tss->ebx;
   int n = task->tss->ecx;

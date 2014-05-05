@@ -49,8 +49,8 @@ void testRead() {
 void init() {
   printf("Hello from ring %x !\n",(getPL() >> 12) & 3);
   
-  syscall_spark(-1,&ping);
-  syscall_spark(-1,&pong);
+  /* syscall_spark(-1,&ping); */
+  /* syscall_spark(-1,&pong); */
   syscall_spark(-1,&testRead);
   syscall_die();
 }

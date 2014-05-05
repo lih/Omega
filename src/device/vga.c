@@ -5,19 +5,21 @@
 #define VGA_DATA 0x3cf
 #define SEQ_ADDR 0x3c4
 #define SEQ_DATA 0x3c5
-#define ACR_ADDR 0x
+#define ACR_ADDR 0x3c0
+#define ACR_DATA 0x3c1
+#define CRT_ADDR 0x3d4
+#define CRT_DATA 0x3d5
+#define MISC_ADDR 0x3cc
+#define MISC_DATA 0x3c2
+#define INPUT_STATUS_1 0x3da
+#define INPUT_STATUS_2 0x3c2
 
-#define SEQ_RESET 0
-#define SEQ_CLOCKING 1
-#define SEQ_MAPMASK 2
-#define SEQ_CHARMAP 3
-#define SEQ_SEQMODE 4
+#define REG(t,i) { t##_ADDR , i , t##_DATA }
 
 typedef struct {
   word addr,index,data;
 } VGAReg;
-
-VGAReg bitmask = { VGA_ADDR, 8, VGA_DATA };
+VGAReg bitmask = REG(VGA,8);
 
 typedef struct {
   byte plane0:1;
@@ -25,16 +27,15 @@ typedef struct {
   byte plane2:1;
   byte plane3:1;
 } PACKED SetReset;
-VGAReg setReset = { VGA_ADDR, 0, VGA_DATA };
-VGAReg enableSetReset = { VGA_ADDR, 1, VGA_DATA };
-VGAReg dontCare = { VGA_ADDR, 7, VGA_DATA };
-VGAReg mapMask = { SEQ_ADDR, 2, SEQ_DATA };
+VGAReg setReset = REG(VGA,0);
+VGAReg enableSetReset = REG(VGA,1);
+VGAReg dontCare = REG(VGA,7);
+VGAReg mapMask = REG(SEQ,2);
 
 typedef struct {
   byte colorCompare:4;
 } PACKED ColorCompare;
-VGAReg colorCompare = { VGA_ADDR, 2, VGA_DATA };
-
+VGAReg colorCompare = REG(VGA,2);
 #define OP_ID 0
 #define OP_AND 1
 #define OP_OR 2
@@ -43,12 +44,12 @@ typedef struct {
   byte rotateCount:3;
   byte operation:2;
 } PACKED DataRotate;
-VGAReg dataRotate = { VGA_ADDR, 3, VGA_DATA };
+VGAReg dataRotate = REG(VGA,3);
 
 typedef struct {
   byte readMap:2;
 } PACKED ReadMap;
-VGAReg readMap = { VGA_ADDR, 4, VGA_DATA };
+VGAReg readMap = REG(VGA,4);
 
 typedef struct {
   byte writeMode:2;
@@ -58,60 +59,120 @@ typedef struct {
   byte shiftReg:1;
   byte shift256:1;
 } PACKED GraphicsMode;
-VGAReg graphicsMode = { VGA_ADDR, 5, VGA_DATA };
+VGAReg graphicsMode = REG(VGA,5);
 
 typedef struct {
   byte graphicsMode:1;
   byte chainOE:1;
   byte memoryMap:2;
 } PACKED MiscReg;
-VGAReg misc = { VGA_ADDR, 6, VGA_DATA };
+VGAReg misc = REG(VGA,6);
+
+typedef struct { 
+  byte map13:1;
+  byte map14:1;
+  byte sldiv:1;
+  byte div2:1;
+  byte _:1;
+  byte aw:1;
+  byte wordByte:1;
+  byte se:1;
+} PACKED CRTCMode;
+VGAReg crtcMode = REG(CRT,0x17);
+typedef struct { 
+  byte vRetraceEnd:4;
+  byte _:2;
+  byte bandwidth:1;
+  byte protect:1;
+} PACKED VRetraceEnd;
+VGAReg vRetraceEnd = REG(CRT,0x11);
 
 typedef struct {
-  SetReset setReset, enableSetReset;
-  ColorCompare colorComp;
+  byte ioas:1;
+  byte ramEnable:1;
+  byte clockSelect:2;
+  byte _:1;
+  byte oepage:1;
+  byte hsyncp:1;
+  byte vsyncp:1;
+} PACKED MiscOutput;
+VGAReg miscOutput = REG(MISC,0);
+
+typedef struct {
+  SetReset setReset, enableSetReset, mapMask;
+  ColorCompare colorCompare;
   DataRotate dataRotate;
   ReadMap readMap;
-  GraphicsMode mode;
+  GraphicsMode graphicsMode;
   MiscReg misc;
   SetReset dontCare;
   byte bitmask;
-  SetReset mapMask;
+  VRetraceEnd vRetraceEnd;
+  MiscOutput miscOutput;
 } PACKED GraphicsRegs;
 
 byte getVGAReg(VGAReg* r) {
-  outportb(r->addr,r->index);
-  return inportb(r->data);
+  switch(r->addr) {
+  case ACR_ADDR:
+    inportb(INPUT_STATUS_1);
+    outportb(ACR_ADDR,r->index);
+    return inportb(ACR_DATA);
+  case MISC_ADDR:
+    return inportb(MISC_ADDR);
+  default:
+    outportb(r->addr,r->index);
+    return inportb(r->data);
+  }
 }
 void setVGAReg(VGAReg* r,byte b) {
-  outportb(r->addr,r->index);
-  outportb(r->data,b);
+  switch(r->addr) {
+  case ACR_ADDR:
+    inportb(INPUT_STATUS_1);
+    outportb(ACR_ADDR,r->index);
+    outportb(ACR_ADDR,b);
+    break;
+
+  case MISC_ADDR:
+    outportb(MISC_DATA,b);
+    break;
+    
+  default:
+    outportb(r->addr,r->index);
+    outportb(r->data,b);
+  }
 }
 
-#define SETREG(x,r) setVGAReg(&(r),AS(byte,x))
-#define GETREG(x,r) AS(byte,x) = getVGAReg(&(r))
+#define SETREG(x,r) setVGAReg(&(r),AS(byte,(x)->r))
+#define GETREG(x,r) AS(byte,(x)->r) = getVGAReg(&(r))
 
 void getGraphicsRegs(GraphicsRegs* r) {
-  GETREG(r->setReset,setReset);
-  GETREG(r->enableSetReset,enableSetReset);
-  GETREG(r->colorComp,colorCompare);
-  GETREG(r->dataRotate,dataRotate);
-  GETREG(r->readMap,readMap);
-  GETREG(r->mode,graphicsMode);
-  GETREG(r->misc,misc);
-  GETREG(r->dontCare,dontCare);
-  GETREG(r->bitmask,bitmask);
+  byte reg = getVGAReg(&miscOutput);
+  AS(MiscOutput,reg).ioas = 1;
+  setVGAReg(&miscOutput,reg);
+  reg = getVGAReg(&vRetraceEnd);
+  AS(VRetraceEnd,reg).protect = 0;
+  setVGAReg(&vRetraceEnd,reg);
+  
+  GETREG(r,setReset);
+  GETREG(r,enableSetReset);
+  GETREG(r,colorCompare);
+  GETREG(r,dataRotate);
+  GETREG(r,readMap);
+  GETREG(r,graphicsMode);
+  GETREG(r,misc);
+  GETREG(r,dontCare);
+  GETREG(r,bitmask);
 }
 void setGraphicsRegs(GraphicsRegs* r) {
-  SETREG(r->setReset,setReset);
-  SETREG(r->enableSetReset,enableSetReset);
-  SETREG(r->colorComp,colorCompare);
-  SETREG(r->dataRotate,dataRotate);
-  SETREG(r->readMap,readMap);
-  SETREG(r->mode,graphicsMode);
-  SETREG(r->misc,misc);
-  SETREG(r->dontCare,dontCare);
-  SETREG(r->bitmask,bitmask);
+  SETREG(r,setReset);
+  SETREG(r,enableSetReset);
+  SETREG(r,colorCompare);
+  SETREG(r,dataRotate);
+  SETREG(r,readMap);
+  SETREG(r,graphicsMode);
+  SETREG(r,misc);
+  SETREG(r,dontCare);
+  SETREG(r,bitmask);
 }
 
 GraphicsRegs curRegs;
@@ -148,8 +209,8 @@ static void initVGA() {
 
   oldRegs.misc.graphicsMode = 1;
   oldRegs.misc.memoryMap = 1;
-  oldRegs.mode.writeMode = 0;
-  oldRegs.mode.shiftReg = 1;
+  oldRegs.graphicsMode.writeMode = 0;
+  oldRegs.graphicsMode.shiftReg = 1;
   oldRegs.dataRotate.operation = OP_ID;
   oldRegs.dataRotate.rotateCount = 0;
   oldRegs.bitmask = 0xff;

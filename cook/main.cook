@@ -17,8 +17,8 @@ setenv BIN = [BIN];
 
 #include [resolve hooks.cook]
 
-sources = [collect ls [SRC]/'*'.s [SRC]/'*'.c];
-headers = [collect ls [SRC]/'*'.h];
+sources = [collect find [SRC] -name '*.s' -o -name '*'.c];
+headers = [collect find [SRC] -name '*.h'];
 docsrc = [collect ls [DOCSRC]/'*'.md];
 
 all: [DIST]/Omega.img {
@@ -30,10 +30,16 @@ docs: [fromto [DOCSRC]/%0%.md [DOC]/%0%.html [docsrc]] {
 clean: {
        rm -rf [BUILD] [DIST]/Omega.img;
 }
+source: [DIST]/Omega.tgz {
+      echo Omega source archive created in [need];
+}
+
+[DIST]/Omega.tgz: [HOOKS]/SrcDist [sources] [headers] [docsrc] [HOOKS] cook
+{ function hook; }
 
 [BUILD]/constants.S: [HOOKS]/ASMConstants [SRC]/constants.h(weak)
 { function hook; }
-[BUILD]/kmain.S.o: [HOOKS]/ASM [SRC]/kmain.S [BUILD]/constants.S(weak)
+[BUILD]/kmain.S.o: [HOOKS]/ASM [SRC]/boot/kmain.S [BUILD]/constants.S(weak)
 { function rawhook; } 
 [BUILD]/ld.conf: [HOOKS]/LDConf [SRC]/constants.h(weak)
 { function hook; }
@@ -45,7 +51,7 @@ clean: {
 
 [BIN]/kernel.bin: [HOOKS]/LD [BUILD]/ld.conf(weak) [BUILD]/kmain.S.o [fromto [SRC]/%0% [BIN]/%0%.o(weak) [sources]]
 { function rawhook; }
-[BIN]/bootsector.bin: [HOOKS]/BootSect [SRC]/bootsector.S(weak) [BUILD]/constants.S(weak)
+[BIN]/bootsector.bin: [HOOKS]/BootSect [SRC]/boot/bootsector.S(weak) [BUILD]/constants.S(weak)
 { function rawhook; }
 
 [DIST]/Omega.img: [HOOKS]/Disk [BIN]/bootsector.bin(weak) [BIN]/kernel.bin(weak) 

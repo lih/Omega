@@ -39,8 +39,10 @@ int readn(int n, char limit, byte* buf) {
 }
 void testRead() {
   char buf[80];
-  int n = readn(79,'\n',buf);
-  printf("Read %d chars: %s\n",n,buf);
+  while(1) {
+    int n = readn(79,'\n',buf);
+    printf("Read %d chars: %s\n",n,buf);
+  }
   syscall_die();
 }
 

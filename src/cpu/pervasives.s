@@ -4,8 +4,15 @@ extern  gdt
 global nop, flushGDT, \
 	outportb,inportb,inportw,outportw, \
 	setPageDirectory,enablePaging,disablePaging, \
-	getTaskRegister,setTaskRegister,getPL
+	getTaskRegister,setTaskRegister,getPL, cmpSet
 
+cmpSet:	
+	mov edx,[esp+4]
+	mov eax,[esp+8]
+	lock
+	xchg eax, [edx]
+	ret
+	
 getPL:
 	pushf
 	pop eax

@@ -94,7 +94,7 @@ void handleKeyboard() {
 	if(ctrl && alt)
 	  shutdown();
 	if(ctrl)
-	  switchMode();
+	  mode13h();
 	break;
       
       default: {

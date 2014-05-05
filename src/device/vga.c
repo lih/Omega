@@ -20,6 +20,85 @@ typedef struct {
   word addr,index,data;
 } VGAReg;
 VGAReg bitmask = REG(VGA,8);
+VGAReg hTotal = REG(CRT,0);
+VGAReg endHDisplay = REG(CRT,1);
+VGAReg startHBlanking = REG(CRT,2);
+VGAReg startHRetrace = REG(CRT,4);
+VGAReg vTotal = REG(CRT,6);
+VGAReg startVRetrace = REG(CRT,0x10);
+VGAReg endVDisplay = REG(CRT,0x12);
+VGAReg offsetReg = REG(CRT,0x13);
+VGAReg startVBlanking = REG(CRT,0x15);
+VGAReg endVBlanking = REG(CRT,0x16);
+VGAReg overscanIndex = REG(ACR,0x31);
+
+typedef struct {
+  byte underlineLocation:5;
+  byte div4:1;
+  byte dw:1;
+} PACKED UnderlineLocation;
+VGAReg underlineLocation = REG(CRT,0x14);
+typedef struct {
+  byte _:1;
+  byte extmem:1;
+  byte oedis:1;
+  byte chain4:1;
+} PACKED MemoryMode;
+VGAReg memoryMode = REG(SEQ,4);
+typedef struct {
+  byte _98dm:1;
+  byte _:1;
+  byte slr:1;
+  byte s4:1;
+  byte sd:1;
+} PACKED ClockingMode;
+VGAReg clockingMode = REG(SEQ,1);
+typedef struct {
+  byte atge:1;
+  byte mono:1;
+  byte lge:1;
+  byte blink:1;
+  byte _:1;
+  byte ppm:1;
+  byte _8bit:1;
+  byte p54s:1;
+} PACKED AttributeMode;
+VGAReg attributeMode = REG(ACR,0x30);
+typedef struct {
+  byte maxScanLine:5;
+  byte svb9:1;
+  byte lc9:1;
+  byte sd:1;
+} PACKED MaxScanLine;
+VGAReg maxScanLine = REG(CRT,9);
+typedef struct {
+  byte presetRowScan:5;
+  byte panning:2;
+} PACKED PresetRowScan;
+VGAReg presetRowScan = REG(CRT,8);
+typedef struct {
+  byte vt8:1;
+  byte vde8:1;
+  byte vrs8:1;
+  byte svb8:1;
+  byte lc8:1;
+  byte vt9:1;
+  byte vde9:1;
+  byte vrs9:1;
+} PACKED Overflow;
+VGAReg overflow = REG(CRT,7);
+typedef struct {
+  byte endHBlanking:5;
+  byte displaySkew:2;
+  byte evra:1;
+} PACKED EndHBlanking;
+VGAReg endHBlanking = REG(CRT,3);
+typedef struct {
+  byte endHRetrace:5;
+  byte hSkew:2;
+  byte ehb5:1;
+} PACKED EndHRetrace;
+VGAReg endHRetrace = REG(CRT,5);
 
 typedef struct {
   byte plane0:1;
@@ -31,6 +110,7 @@ VGAReg setReset = REG(VGA,0);
 VGAReg enableSetReset = REG(VGA,1);
 VGAReg dontCare = REG(VGA,7);
 VGAReg mapMask = REG(SEQ,2);
+VGAReg colorPlaneEnable = REG(ACR,0x32);
 
 typedef struct {
   byte colorCompare:4;
@@ -80,12 +160,12 @@ typedef struct {
 } PACKED CRTCMode;
 VGAReg crtcMode = REG(CRT,0x17);
 typedef struct { 
-  byte vRetraceEnd:4;
+  byte endVRetrace:4;
   byte _:2;
   byte bandwidth:1;
   byte protect:1;
-} PACKED VRetraceEnd;
-VGAReg vRetraceEnd = REG(CRT,0x11);
+} PACKED EndVRetrace;
+VGAReg endVRetrace = REG(CRT,0x11);
 
 typedef struct {
   byte ioas:1;
@@ -107,9 +187,15 @@ typedef struct {
   MiscReg misc;
   SetReset dontCare;
   byte bitmask;
-  VRetraceEnd vRetraceEnd;
   MiscOutput miscOutput;
-} PACKED GraphicsRegs;
+  byte hTotal,vTotal,
+    startHBlanking,startVBlanking,
+    startHRetrace,startVRetrace,
+    endVDisplay,endHDisplay;
+  byte endVBlanking; EndHBlanking endHBlanking;
+  EndVRetrace endVRetrace; EndHRetrace endHRetrace;
+  Overflow overflow;
+} PACKED VGARegs;
 
 byte getVGAReg(VGAReg* r) {
   switch(r->addr) {
@@ -131,11 +217,9 @@ void setVGAReg(VGAReg* r,byte b) {
     outportb(ACR_ADDR,r->index);
     outportb(ACR_ADDR,b);
     break;
-
   case MISC_ADDR:
     outportb(MISC_DATA,b);
     break;
-    
   default:
     outportb(r->addr,r->index);
     outportb(r->data,b);
@@ -145,13 +229,13 @@ void setVGAReg(VGAReg* r,byte b) {
 #define SETREG(x,r) setVGAReg(&(r),AS(byte,(x)->r))
 #define GETREG(x,r) AS(byte,(x)->r) = getVGAReg(&(r))
 
-void getGraphicsRegs(GraphicsRegs* r) {
+void getVGARegs(VGARegs* r) {
   byte reg = getVGAReg(&miscOutput);
   AS(MiscOutput,reg).ioas = 1;
   setVGAReg(&miscOutput,reg);
-  reg = getVGAReg(&vRetraceEnd);
-  AS(VRetraceEnd,reg).protect = 0;
-  setVGAReg(&vRetraceEnd,reg);
+  reg = getVGAReg(&endVRetrace);
+  AS(EndVRetrace,reg).protect = 0;
+  setVGAReg(&endVRetrace,reg);
   
   GETREG(r,setReset);
   GETREG(r,enableSetReset);
@@ -163,7 +247,14 @@ void getGraphicsRegs(GraphicsRegs* r) {
   GETREG(r,dontCare);
   GETREG(r,bitmask);
 }
-void setGraphicsRegs(GraphicsRegs* r) {
+void setVGARegs(VGARegs* r) {
+  byte reg = getVGAReg(&miscOutput);
+  AS(MiscOutput,reg).ioas = 1;
+  setVGAReg(&miscOutput,reg);
+  reg = getVGAReg(&endVRetrace);
+  AS(EndVRetrace,reg).protect = 0;
+  setVGAReg(&endVRetrace,reg);
+
   SETREG(r,setReset);
   SETREG(r,enableSetReset);
   SETREG(r,colorCompare);
@@ -175,16 +266,16 @@ void setGraphicsRegs(GraphicsRegs* r) {
   SETREG(r,bitmask);
 }
 
-GraphicsRegs curRegs;
-GraphicsRegs oldRegs;
+VGARegs curRegs;
+VGARegs oldRegs;
 
 #define VGA_START 0xA0000
 #define VGA_END 0xB0000
 void switchMode() {
-  GraphicsRegs old = oldRegs;
+  VGARegs old = oldRegs;
   oldRegs = curRegs;
   curRegs = old;
-  setGraphicsRegs(&curRegs);
+  setVGARegs(&curRegs);
   dword* cur = VGA_START;
   for(;cur<VGA_END;cur++)
     *cur = 0xffff0000;
@@ -205,7 +296,7 @@ void switchMode() {
 }
 
 static void initVGA() {
-  getGraphicsRegs(&oldRegs);
+  getVGARegs(&oldRegs);
 
   oldRegs.misc.graphicsMode = 1;
   oldRegs.misc.memoryMap = 1;
@@ -217,10 +308,50 @@ static void initVGA() {
   AS(byte,oldRegs.enableSetReset) = 0;
   AS(byte,oldRegs.mapMask) = 0xf;
 
-  getGraphicsRegs(&curRegs);
+  getVGARegs(&curRegs);
 }
 Feature _vga_ = {
   .state = DISABLED,
   .label = "VGA",
   .initialize = &initVGA
 };
+
+#define VGAFREQ 25000000
+void mode13h() {
+  byte reg = getVGAReg(&miscOutput);
+  AS(MiscOutput,reg).ioas = 1;
+  setVGAReg(&miscOutput,reg);
+  reg = getVGAReg(&endVRetrace);
+  AS(EndVRetrace,reg).protect = 0;
+  setVGAReg(&endVRetrace,reg);
+
+  setVGAReg(&attributeMode,0x41);
+  setVGAReg(&colorPlaneEnable,0xf);
+  setVGAReg(&clockingMode,1);
+  setVGAReg(&memoryMode,0xe);
+  setVGAReg(&graphicsMode,0x40);
+  setVGAReg(&misc,5);
+
+  setVGAReg(&overflow,0x1f);
+  setVGAReg(&maxScanLine,0x41);
+  setVGAReg(&underlineLocation,0x40);
+
+  setVGAReg(&crtcMode,0xa3);
+
+
+  setVGAReg(&hTotal,0x5f);
+  setVGAReg(&endHDisplay,0x4f);
+  setVGAReg(&startHBlanking,0x50);
+  setVGAReg(&endHBlanking,0x82);
+  setVGAReg(&startHRetrace,0x54);
+  setVGAReg(&endHRetrace,0x80);
+
+  setVGAReg(&vTotal,0xbf);
+  setVGAReg(&endVDisplay,0x8f);
+  setVGAReg(&startVBlanking,0x96);
+  setVGAReg(&endVBlanking,0xb9);
+  setVGAReg(&startVRetrace,0x9c);
+  setVGAReg(&endVRetrace,0x8e);
+
+  setVGAReg(&miscOutput,0x63);
+}

@@ -3,24 +3,40 @@
 #include <cpu/syscall.h>
 #include <device/keyboard.h>
 
-dword pingsem = 1;
-dword pongsem = 0;
+dword pingsem = 1, pongsem = 0;
+int nping = 0;
+#define MAXPING 5
 
 void ping() {
-  while(1) {
+  int c = 1;
+  while(c) {
     syscall_acquire(&pingsem);
     printf("Ping\n");
-    syscall_wait(1,0);
+    nping++;
+    if(nping >= MAXPING) {
+      printf("I have no more ping in me...\n");
+      c = 0;
+    }
+    else 
+      syscall_wait(1,0);
     syscall_release(&pongsem,1);
   }
+  syscall_die();
 }
 void pong() {
-  while(1) {
+  int c = 1;
+  while(c) {
     syscall_acquire(&pongsem);
     printf("Pong\n");
+    nping++;
+    if(nping >= MAXPING) {
+      printf("I have no more pong in me...\n");
+      c = 0;
+    }
     syscall_wait(1,0);
     syscall_release(&pingsem,1);
   }
+  syscall_die();
 }
 
 byte readChar() {
@@ -49,8 +65,8 @@ void testRead() {
 void init() {
   printf("Hello from ring %x !\n",(getPL() >> 12) & 3);
   
-  /* syscall_spark(-1,&ping); */
-  /* syscall_spark(-1,&pong); */
+  syscall_spark(-1,&ping); 
+  syscall_spark(-1,&pong); 
   syscall_spark(-1,&testRead);
   syscall_die();
 }

@@ -11,6 +11,8 @@
 #define CRT_DATA 0x3d5
 #define MISC_ADDR 0x3cc
 #define MISC_DATA 0x3c2
+#define COLOR_DATA 0x3c8
+#define COLOR_ADDR 0x3c9
 #define INPUT_STATUS_1 0x3da
 #define INPUT_STATUS_2 0x3c2
 
@@ -197,6 +199,12 @@ typedef struct {
   Overflow overflow;
 } PACKED VGARegs;
 
+void setVGAColor(int index, byte r, byte g, byte b) {
+  outportb(COLOR_ADDR,index);
+  outportb(COLOR_DATA,r);
+  outportb(COLOR_DATA,g);
+  outportb(COLOR_DATA,b);
+}
 byte getVGAReg(VGAReg* r) {
   switch(r->addr) {
   case ACR_ADDR:
@@ -224,6 +232,8 @@ void setVGAReg(VGAReg* r,byte b) {
     outportb(r->addr,r->index);
     outportb(r->data,b);
   }
+  if(getVGAReg(r) != b)
+    printf("Unable to write register %x (ind. %x)\n",r->addr,r->index);
 }
 
 #define SETREG(x,r) setVGAReg(&(r),AS(byte,(x)->r))
@@ -324,20 +334,19 @@ void mode13h() {
   reg = getVGAReg(&endVRetrace);
   AS(EndVRetrace,reg).protect = 0;
   setVGAReg(&endVRetrace,reg);
-
+  setVGAReg(&crtcMode,0xa3);
   setVGAReg(&attributeMode,0x41);
+
+  setVGAReg(&misc,5);
+  setVGAReg(&graphicsMode,0x40);
+
   setVGAReg(&colorPlaneEnable,0xf);
   setVGAReg(&clockingMode,1);
   setVGAReg(&memoryMode,0xe);
-  setVGAReg(&graphicsMode,0x40);
-  setVGAReg(&misc,5);
 
   setVGAReg(&overflow,0x1f);
   setVGAReg(&maxScanLine,0x41);
   setVGAReg(&underlineLocation,0x40);
-
-  setVGAReg(&crtcMode,0xa3);
-
 
   setVGAReg(&hTotal,0x5f);
   setVGAReg(&endHDisplay,0x4f);
@@ -353,5 +362,12 @@ void mode13h() {
   setVGAReg(&startVRetrace,0x9c);
   setVGAReg(&endVRetrace,0x8e);
 
+  setVGAColor(0xff,0,255,0);
+  dword* cur = VGA_START;
+  for(;cur<VGA_END;cur++)
+    *cur = 0x004488cc;
+
+  for(;;);
   setVGAReg(&miscOutput,0x63);
+
 }

@@ -26,6 +26,9 @@ typedef struct {
 #define GETREG(x,r) AS(byte,(x)->r) = getVGAReg(&(r))
 #define MODREG(r,t,x) { t REG; AS(byte,REG) = getVGAReg(&(r)); x; setVGAReg(&(r),AS(byte,REG)); } 
 
+#define VGA_START 0xA0000
+#define VGA_END 0xC0000
+
 #define VGA_ADDR 0x3ce
 #define VGA_DATA 0x3cf
 #define SEQ_ADDR 0x3c4

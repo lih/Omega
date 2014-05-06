@@ -30,7 +30,7 @@
 00000000000i[     ]   SB16 support: no
 00000000000i[     ]   USB support: no
 00000000000i[     ]   VGA extension support: vbe 
-00000000000i[MEM0 ] allocated memory at 0x2b76c3a80010. after alignment, vector=0x2b76c3a81000
+00000000000i[MEM0 ] allocated memory at 0x2b5c9f2b2010. after alignment, vector=0x2b5c9f2b3000
 00000000000i[MEM0 ] 32,00MB
 00000000000i[MEM0 ] mem block size = 0x00100000, blocks=32
 00000000000i[MEM0 ] rom at 0xfffe0000/131072 ('build/bios/BIOS-bochs-latest')
@@ -41,7 +41,7 @@
 00000000000i[PCI  ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[     ] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS ] Using local time for initial clock
-00000000000i[CMOS ] Setting initial clock to: Tue May  6 10:55:23 2014 (time0=1399366523)
+00000000000i[CMOS ] Setting initial clock to: Tue May  6 15:51:12 2014 (time0=1399384272)
 00000000000i[     ] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA  ] channel 4 used by cascade
 00000000000i[     ] init_dev of 'pic' plugin device by virtual method
@@ -180,59 +180,59 @@
 00001371945i[BIOS ] Firmware waking vector 0x1ff00cc
 00001373366i[PCI  ] 440FX PMC write to PAM register 59 (TLB Flush)
 00001374094i[BIOS ] bios_table_cur_addr: 0x000fa664
-00001915871i[XGUI ] charmap update. Font Height is 16
+00002288055i[XGUI ] charmap update. Font Height is 16
 00017514370i[BIOS ] ata0-0: PCHS=8/1/16 translation=none LCHS=8/1/16
-00021356869i[BIOS ] IDE time out
-04319773114i[BIOS ] Booting from 0000:7c00
-04319803139i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
-04319805187i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
-04319807235i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
-04319809283i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
-04319811331i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
-04319813379i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
-04319815427i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
-04319817475i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
-04319819523i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
-04319821571i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
-04319823619i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
-04319825667i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
-04319827715i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
-04319829763i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
-04319831811i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
-04319833859i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
-04319835907i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
-04319837955i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
-04319840003i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
-04319842051i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
-04319844099i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
-04319846147i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
-04319848195i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
-04319850243i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
-04319852291i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
-04319854339i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
-04319856387i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
-04319858435i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
-04319860483i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
-04319862531i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
-04393064858i[XGUI ] charmap update. Font Height is 4
-04674324000p[XGUI ] >>PANIC<< POWER button turned off.
-04674324000i[CPU0 ] CPU is in protected mode (active)
-04674324000i[CPU0 ] CS.mode = 32 bit
-04674324000i[CPU0 ] SS.mode = 32 bit
-04674324000i[CPU0 ] EFER   = 0x00000000
-04674324000i[CPU0 ] | EAX=00000640  EBX=000012ac  ECX=000003d5  EDX=000003d5
-04674324000i[CPU0 ] | ESP=00013f4c  EBP=00013f54  ESI=00000000  EDI=00000000
-04674324000i[CPU0 ] | IOPL=0 id vip vif ac vm rf NT of df if tf sf zf af pf cf
-04674324000i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
-04674324000i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
-04674324000i[CPU0 ] | EIP=00002af6 (00002af6)
-04674324000i[CPU0 ] | CR0=0xe0000019 CR2=0x00000000
-04674324000i[CPU0 ] | CR3=0x01ffe000 CR4=0x00000010
-04674324000i[CMOS ] Last time is 1399367691 (Tue May  6 11:14:51 2014)
-04674324000i[XGUI ] Exit
-04674324000i[CTRL ] quit_sim called with exit code 1
+00021356892i[BIOS ] IDE time out
+00899168112i[BIOS ] Booting from 0000:7c00
+00899198667i[MEM0 ] allocate_block: block=0x1 used 0x3 of 0x20
+00899200715i[MEM0 ] allocate_block: block=0x2 used 0x4 of 0x20
+00899202763i[MEM0 ] allocate_block: block=0x3 used 0x5 of 0x20
+00899204811i[MEM0 ] allocate_block: block=0x4 used 0x6 of 0x20
+00899206859i[MEM0 ] allocate_block: block=0x5 used 0x7 of 0x20
+00899208907i[MEM0 ] allocate_block: block=0x6 used 0x8 of 0x20
+00899210955i[MEM0 ] allocate_block: block=0x7 used 0x9 of 0x20
+00899213003i[MEM0 ] allocate_block: block=0x8 used 0xa of 0x20
+00899215051i[MEM0 ] allocate_block: block=0x9 used 0xb of 0x20
+00899217099i[MEM0 ] allocate_block: block=0xa used 0xc of 0x20
+00899219147i[MEM0 ] allocate_block: block=0xb used 0xd of 0x20
+00899221195i[MEM0 ] allocate_block: block=0xc used 0xe of 0x20
+00899223243i[MEM0 ] allocate_block: block=0xd used 0xf of 0x20
+00899225291i[MEM0 ] allocate_block: block=0xe used 0x10 of 0x20
+00899227339i[MEM0 ] allocate_block: block=0xf used 0x11 of 0x20
+00899229387i[MEM0 ] allocate_block: block=0x10 used 0x12 of 0x20
+00899231435i[MEM0 ] allocate_block: block=0x11 used 0x13 of 0x20
+00899233483i[MEM0 ] allocate_block: block=0x12 used 0x14 of 0x20
+00899235531i[MEM0 ] allocate_block: block=0x13 used 0x15 of 0x20
+00899237579i[MEM0 ] allocate_block: block=0x14 used 0x16 of 0x20
+00899239627i[MEM0 ] allocate_block: block=0x15 used 0x17 of 0x20
+00899241675i[MEM0 ] allocate_block: block=0x16 used 0x18 of 0x20
+00899243723i[MEM0 ] allocate_block: block=0x17 used 0x19 of 0x20
+00899245771i[MEM0 ] allocate_block: block=0x18 used 0x1a of 0x20
+00899247819i[MEM0 ] allocate_block: block=0x19 used 0x1b of 0x20
+00899249867i[MEM0 ] allocate_block: block=0x1a used 0x1c of 0x20
+00899251915i[MEM0 ] allocate_block: block=0x1b used 0x1d of 0x20
+00899253963i[MEM0 ] allocate_block: block=0x1c used 0x1e of 0x20
+00899256011i[MEM0 ] allocate_block: block=0x1d used 0x1f of 0x20
+00899258059i[MEM0 ] allocate_block: block=0x1e used 0x20 of 0x20
+00899395394i[XGUI ] charmap update. Font Height is 16
+02501648000p[XGUI ] >>PANIC<< POWER button turned off.
+02501648000i[CPU0 ] CPU is in protected mode (active)
+02501648000i[CPU0 ] CS.mode = 32 bit
+02501648000i[CPU0 ] SS.mode = 32 bit
+02501648000i[CPU0 ] EFER   = 0x00000000
+02501648000i[CPU0 ] | EAX=00000001  EBX=00000000  ECX=00003a34  EDX=000003d5
+02501648000i[CPU0 ] | ESP=00010ddc  EBP=00010de8  ESI=000e0000  EDI=00001080
+02501648000i[CPU0 ] | IOPL=0 id vip vif ac vm rf nt of df IF tf sf zf af pf cf
+02501648000i[CPU0 ] | SEG sltr(index|ti|rpl)     base    limit G D
+02501648000i[CPU0 ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] |  FS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] |  GS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+02501648000i[CPU0 ] | EIP=00002fe5 (00002fe5)
+02501648000i[CPU0 ] | CR0=0xe0000019 CR2=0x00000000
+02501648000i[CPU0 ] | CR3=0x01ffe000 CR4=0x00000010
+02501648000i[CMOS ] Last time is 1399384897 (Tue May  6 16:01:37 2014)
+02501648000i[XGUI ] Exit
+02501648000i[CTRL ] quit_sim called with exit code 1

@@ -87,8 +87,18 @@ Feature _exceptions_ = {
 };
 
 void handleException() {
-  printf("Caught Exception\n");
-  while(1) nop();
+  TSS* tss = TSS_AT(getTaskRegister());
+  while(1) {
+    TSS* child = TSS_AT(tss->previousTask);
+  
+    printf("Caught exception in TSS %x\n"
+	   "eax=%x ebx=%x ecx=%x edx=%x\n"
+	   "esp=%x ss=%x eip=%x cs=%x\n",
+	   child,child->eax,child->ebx,child->ecx,child->edx,
+	   child->esp,child->ss,child->eip,child->cs);
+
+    asm __volatile__ ( "iret" );
+  }
 }
 
 void unhandledIRQ() {

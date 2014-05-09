@@ -25,4 +25,7 @@ void    getPL();
 
 dword compareAndSet(dword* addr,dword val);
 
+void realMode(void (*callback)());
+dword getIP();
+
 #endif

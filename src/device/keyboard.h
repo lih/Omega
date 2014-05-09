@@ -10,7 +10,13 @@ extern Feature _keyboard_;
 extern char layout[128];
 extern Selector keyboardGate;
 
-extern Semaphore keyboardSem;
+extern Semaphore scanSem;
 extern byte currentScan;
+extern Semaphore charSem;
+extern byte currentChar;
+
+char readChar();
+byte readScan();
+int readn(int n, char limit, char* buf);
 
 #endif

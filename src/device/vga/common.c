@@ -14,21 +14,26 @@ byte getVGAReg(VGAReg* r) {
   }
 }
 void setVGAReg(VGAReg* r,byte b) {
-  switch(r->addr) {
-  case ACR_ADDR:
-    inportb(INPUT_STATUS_1);
-    outportb(ACR_ADDR,r->index);
-    outportb(ACR_ADDR,b);
-    break;
-  case MISC_ADDR:
-    outportb(MISC_DATA,b);
-    break;
-  default:
-    outportb(r->addr,r->index);
-    outportb(r->data,b);
-  }
-  if(getVGAReg(r) != b) {
-    printf("Unable to write register %x (ind. %x)\n",r->addr,r->index);
-    while(1);
-  }
+  byte newVal;
+  do {
+    switch(r->addr) {
+    case ACR_ADDR:
+      inportb(INPUT_STATUS_1);
+      outportb(ACR_ADDR,r->index);
+      outportb(ACR_ADDR,b);
+      outportb(ACR_ADDR,r->index);
+      newVal = inportb(ACR_ADDR);
+      break;
+    case MISC_ADDR:
+      outportb(MISC_DATA,b);
+      newVal = inportb(MISC_ADDR);
+      break;
+    default:
+      outportb(r->addr,r->index);
+      outportb(r->data,b);
+      newVal = inportb(r->data);
+    }
+    if(newVal != b) 
+      printf("Couldn't write reg %x (oldVal=%x new=%x)\n",r->addr,b,newVal);
+  } while(newVal != b);
 }

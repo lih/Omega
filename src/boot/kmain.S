@@ -73,8 +73,7 @@ protected_mode:
 	mov es, ax
 	mov esp, KERNEL_STACK
 	
-        call main
-	jmp $
+        jmp main
 
 	ALIGN 8
 KERNEL_SIZE:

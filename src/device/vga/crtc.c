@@ -22,6 +22,9 @@ VGAReg maxScanLine		= REG(CRT,9);
 VGAReg crtcMode			= REG(CRT,0x17);
 
 void getCRTCRegs(CRTCRegs* regs) {
+  MODREG(endHBlanking,EndHBlanking,REG.evra = 1);
+  MODREG(endVRetrace,EndVRetrace,REG.protect = 0);
+
   GETREG(regs,hTotal);
   GETREG(regs,endHDisplay);
   GETREG(regs,startHBlanking);
@@ -61,8 +64,8 @@ void setCRTCRegs(CRTCRegs* regs) {
   SETREG(regs,endVDisplay);
   SETREG(regs,startVBlanking);
   SETREG(regs,startVRetrace);
-  SETREG(regs,endVRetrace);
   SETREG(regs,endVBlanking);
+  SETREG(regs,endVRetrace);
   
   SETREG(regs,offset);
   SETREG(regs,underlineLocation);
@@ -70,4 +73,6 @@ void setCRTCRegs(CRTCRegs* regs) {
   SETREG(regs,overflow);
   SETREG(regs,maxScanLine);
   SETREG(regs,crtcMode);
+
+  MODREG(endVRetrace,EndVRetrace,REG.protect = 1);
 }

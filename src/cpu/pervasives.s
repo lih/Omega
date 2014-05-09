@@ -1,10 +1,99 @@
 %include "constants.S"
 
-extern  gdt
-global nop, flushGDT, \
+extern  gdt, idt, kernelSpace
+global nop, flushGDT, getIP, \
 	outportb,inportb,inportw,outportw, \
 	setPageDirectory,enablePaging,disablePaging, \
-	getTaskRegister,setTaskRegister,getPL, compareAndSet
+	getTaskRegister,setTaskRegister,getPL, compareAndSet, \
+	realMode, protectedMode
+
+getIP:
+	mov eax,[esp]
+	ret
+	
+realMode:
+	push ebx
+	push ecx
+	mov ebx,[esp+12]
+	mov ecx,esp
+
+	call disablePaging
+	lgdt [rmGDT]
+	jmp CODE_SEGMENT:_16bitMode
+[BITS 16]
+_16bitMode:
+	mov esp,KERNEL_START
+	
+	mov eax,cr0
+	and eax,0fffffffeh
+	mov cr0,eax
+	jmp 0:_realMode
+_realMode:	
+	mov ax,0
+	mov ds,ax
+	mov es,ax
+	mov gs,ax
+	mov fs,ax
+	mov ss,ax
+	lidt [rmIDT]
+
+	call bx
+
+	lgdt [gdt]
+	mov eax,cr0
+	or eax,1
+	mov cr0,eax
+	jmp CODE_SEGMENT:_pMode
+[BITS 32]
+_pMode:	
+	mov ax,DATA_SEGMENT
+	mov ss,ax
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
+	mov esp,ecx
+
+	lidt [idt]
+
+	mov eax,[kernelSpace]
+	mov cr3,eax
+	call enablePaging
+	
+	pop ecx
+	pop ebx
+	ret
+
+	ALIGN 4
+	dw 0
+rmIDT:
+	dw 3ffh
+	dd 0
+
+	dw 0
+rmGDT:
+ 	dw rmGDT_end-rmGDT_start-1
+	dd rmGDT_start
+
+rmGDT_start:
+	dq 0
+
+	;; GDT 16-bit code segment
+	dw 0FFFFh 		; segment size 0-15
+	dw 0			; segment base 0-15
+	db 0 			; segment base 16-23
+	db 10011010b		; 0: present ; 1-2: dpl 0 ; 3: code/data segment ; 4-7: segment type
+	db 10001111b 		; 0-3: segment size 16-19 ; 
+	db 0			; segment base 24-31
+
+	;; GDT 16-bit data segment
+	dw 0FFFFh
+	dw 0
+	db 0
+	db 10010010b
+	db 10001111b
+	db 0
+rmGDT_end:
 
 compareAndSet:	
 	mov edx,[esp+4]

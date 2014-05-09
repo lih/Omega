@@ -10,7 +10,11 @@ void getSeqRegs(SeqRegs* regs) {
   GETREG(regs,mapMask);
 }
 void setSeqRegs(SeqRegs* regs) {
-  SETREG(regs,clockingMode);
   SETREG(regs,memoryMode);
   SETREG(regs,mapMask);
+  SETREG(regs,clockingMode);
+}
+
+void disableScreen() {
+  MODREG(clockingMode,ClockingMode,REG.sd = 1);
 }

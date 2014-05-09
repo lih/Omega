@@ -16,9 +16,20 @@ SyscallHandler syscalls[SYS_COUNT] = {
   [SYS_MAPFROM] = sys_mapFrom,
   [SYS_SPAWN] = sys_spawn,
   [SYS_ANIHILATE] = sys_anihilate,
-  [SYS_WAIT] = sys_wait
+  [SYS_WAIT] = sys_wait,
+  [SYS_BIOS] = sys_bios
 };
 
+BIOSFun biosFuns[] = {
+  bios_mode03h, bios_mode13h
+};
+
+void sys_bios(Task* t) {
+  dword ind = t->tss->ebx;
+
+  if(ind < SZ(biosFuns)) 
+    realMode(biosFuns[ind]);
+}
 void handleSyscalls() {
   TSS* ss = TSS_AT(getTaskRegister());
 

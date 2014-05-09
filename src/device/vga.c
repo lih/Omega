@@ -13,16 +13,18 @@ void setVGAColor(int index, byte r, byte g, byte b) {
 void getVGARegs(VGARegs* r) {
   GETREG(r,miscOutput);
   getSeqRegs(&(r->seq));
-  getCRTCRegs(&(r->crtc));
   getGCRegs(&(r->gc));
   getACRRegs(&(r->acr));
+  getCRTCRegs(&(r->crtc));
 }
 void setVGARegs(VGARegs* r) {
+  disableScreen();
+
   SETREG(r,miscOutput);
-  setSeqRegs(&(r->seq));
+  setACRRegs(&(r->acr));
   setCRTCRegs(&(r->crtc));
   setGCRegs(&(r->gc));
-  setACRRegs(&(r->acr));
+  setSeqRegs(&(r->seq));
 }
 
 VGARegs fbMode;
@@ -37,24 +39,6 @@ Feature _vga_ = {
   .initialize = &initVGA
 };
 
-VGARegs* oldRegs = &fbMode;
-VGARegs* curRegs = &fbMode;
-void switchMode() {
-  VGARegs* old = oldRegs;
-  oldRegs = curRegs;
-  curRegs = old;
-  
-  setVGARegs(curRegs);
-
-  dword* cur = VGA_START;
-  for(;cur<VGA_END;cur++)
-    *cur = 0xffff0000;
-}
-
-void mode13h() {
-  setVGARegs(&mode_13h);
-}
-
 VGARegs mode_13h = {
   .seq = {
     .clockingMode = {
@@ -62,6 +46,7 @@ VGARegs mode_13h = {
     },
     .memoryMode = {
       .extmem = 1,
+      .oedis = 1,
       .chain4 = 1
     },
     .mapMask = { 1,1,1,1 }
@@ -94,7 +79,7 @@ VGARegs mode_13h = {
     .endVBlanking = 0xb9,
     .endVRetrace = { .endVRetrace = 0xe },
     
-    .underlineLocation = {  },
+    .underlineLocation = { .dw = 1 },
     .maxScanLine = {
       .maxScanLine = 1,
       .lc9 = 1
@@ -107,13 +92,12 @@ VGARegs mode_13h = {
   },
   .gc = {
     .bitmask = 0xff,
-    .graphicsMode = { .shift256 = 1 },
+    .graphicsMode = { .hostOE = 1, .shift256 = 1 },
     .misc = {
       .graphicsMode = 1, .memoryMap = 1
     },
   },
   .miscOutput = {
     .ioas = 1, .ramEnable = 1,
-    .hsyncp = 1, .oepage = 1
   }
 };

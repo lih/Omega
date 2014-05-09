@@ -5,8 +5,10 @@
 #include <device/vga.h>
 
 Selector keyboardGate;
-Semaphore keyboardSem = 0;
+Semaphore scanSem = 0;
 byte currentScan;
+Semaphore charSem = 0;
+char currentChar;
 
 void handleKey(byte);
 extern void handleKeyboard();
@@ -65,13 +67,17 @@ Feature _keyboard_ = {
 };
 
 byte ctrl = 0, shift = 0, alt = 0;
+char currentChar;
 
 void handleKeyboard() {
   TSS* ss = TSS_AT(getTaskRegister());
-  
+
   while(1) {
     byte scan = inportb(0x60);
 
+    currentScan = scan;
+    releaseSem(&scanSem,0);
+    scanSem = 0;
     if(!(scan & 0x80)) {
       switch(layout[scan]) {
       case 0:
@@ -93,15 +99,13 @@ void handleKeyboard() {
       case 27: /* ESCAPE */
 	if(ctrl && alt)
 	  shutdown();
-	if(ctrl)
-	  mode13h();
 	break;
       
       default: {
-	currentScan = layout[scan] - (shift*32);
-	putChar(currentScan);
-	releaseSem(&keyboardSem,0);
-	keyboardSem = 0;
+	currentChar = layout[scan] - shift*32;
+	putChar(currentChar);
+	releaseSem(&charSem,0);
+	charSem = 0;
 	break;
       }
       }
@@ -124,3 +128,25 @@ void handleKeyboard() {
     asm __volatile ( "iret" );
   } 
 }
+
+char readChar() {
+  syscall_acquire(&charSem);
+  return currentChar;
+}
+byte readScan() {
+  syscall_acquire(&scanSem);
+  return currentScan;
+}
+int readn(int n, char limit, char* buf) {
+  int i;
+  for(i=0;i<n;i++) {
+    buf[i] = readChar();
+    if(buf[i] == '\b')
+      i-=2;
+    if(buf[i] == limit)
+      break;
+  }
+  buf[i] = '\0';
+  return i;
+}
+

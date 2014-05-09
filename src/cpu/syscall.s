@@ -1,5 +1,8 @@
 %include "constants.S"
 	
+global syscall_die,syscall_spark,syscall_spawn,syscall_warp,syscall_alloc,syscall_acquire, \
+	syscall_release,syscall_mapTo,syscall_mapFrom,syscall_anihilate,syscall_wait, syscall_bios
+
 %macro syscallstub_0 1
 	mov eax, %1
 	int 48
@@ -39,9 +42,6 @@
 	ret
 %endmacro	
 
-global syscall_die,syscall_spark,syscall_spawn,syscall_warp,syscall_alloc,syscall_acquire, \
-	syscall_release,syscall_mapTo,syscall_mapFrom,syscall_anihilate,syscall_wait
-
 syscall_die:
 	syscallstub_0 SYS_DIE
 syscall_spark:	
@@ -64,4 +64,23 @@ syscall_anihilate:
 	syscallstub_1 SYS_ANIHILATE
 syscall_wait:
 	syscallstub_2 SYS_WAIT
+syscall_bios:	
+	syscallstub_1 SYS_BIOS
+
+[BITS 16]
+global bios_mode13h, bios_mode03h
 	
+bios_mode13h:
+	pusha
+	mov al,13h
+	mov ah,0
+	int 10h
+	popa
+	ret
+bios_mode03h:
+	pusha
+	mov al,03h
+	mov ah,0
+	int 10h
+	popa
+	ret

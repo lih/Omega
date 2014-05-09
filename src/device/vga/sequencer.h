@@ -26,4 +26,6 @@ typedef struct {
 void getSeqRegs(SeqRegs* regs);
 void setSeqRegs(SeqRegs* regs);
 
+void disableScreen();
+
 #endif

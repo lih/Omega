@@ -4,10 +4,11 @@
 #include <cpu/descriptors.h>
 #include <core/feature.h>
 
+typedef int UIndex;
 typedef struct Universe {
   Dir* pageDir;
   int dpl;
-  int index;
+  UIndex index;
   struct Universe *up, *left, *right, *down;  
 } Universe;
 

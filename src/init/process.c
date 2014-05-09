@@ -3,6 +3,7 @@
 #include <constants.h>
 #include <cpu/syscall.h>
 #include <device/framebuffer.h>
+#include <device/vga.h>
 #include <cpu/interrupt.h>
 #include <init/init.h>
 
@@ -22,6 +23,8 @@ static void initialize() {
     mapPage(initUniv,vpage,vpage,1);
   for(vpage = FB_MEM & 0xfffff000;vpage < FB_END;vpage+=PAGE_SIZE)
     mapPage(initUniv,vpage,vpage,1);
+  for(vpage = VGA_START & 0xfffff000;vpage < VGA_END;vpage+=PAGE_SIZE)
+    mapPage(initUniv,vpage,vpage,1);
   MAP_STACK(initUniv,EXC_STACK);
   MAP_STACK(initUniv,INT_STACK);
   MAP_STACK(initUniv,SYS_STACK);
@@ -30,6 +33,6 @@ static void initialize() {
 }
 Feature _process_ = {
   .state = DISABLED,
-  .label = "processes",
+  .label = "main process",
   .initialize = initialize
 };

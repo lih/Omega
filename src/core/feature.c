@@ -18,12 +18,13 @@ void require(Feature* feature) {
     break;
   case DISABLED: {
     feature->state = ENABLING;
+    PAD printf("Initializing %s\n",feature->label);
     featureDepth++;
     feature->initialize();
     featureDepth--;
-    PAD printf("Initialized %s\n",feature->label);
     feature->state = ENABLED;
     break;
   }
   }
 }
+

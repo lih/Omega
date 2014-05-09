@@ -34,7 +34,11 @@
 #define SYS_SPAWN 8
 #define SYS_ANIHILATE 9
 #define SYS_WAIT 10
-#define SYS_COUNT 11
+#define SYS_BIOS 11
+#define SYS_COUNT 12
+
+#define BIOS_MODE03H 0
+#define BIOS_MODE13H 1
 
 extern void KERNEL_END;
 extern int const KERNEL_SIZE;

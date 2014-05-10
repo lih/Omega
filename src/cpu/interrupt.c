@@ -141,12 +141,3 @@ Feature _irqs_ = {
   .label = "IRQs",
   .initialize = initIRQs
 };
-
-void sys_alloc(struct Task* t) {
-  dword vpage = t->tss->ebx;
-  int n = t->tss->ecx;
-
-  int i;
-  for(i=0;i<n;i++)
-    mapPage(t->univ,vpage+(i*PAGE_SIZE),allocatePage(),1);
-}

@@ -8,7 +8,7 @@
 #define STACK_PAGES 16
 #define STACK_SIZE  (STACK_PAGES * PAGE_SIZE)
 #define STACK_START(slot) (-((1+(slot))*STACK_SIZE))
-#define STACK_PAGE(s,i) (s-(i+1)*PAGE_SIZE)
+#define STACK_PAGE(s,i) ((void*)(s-(i+1)*PAGE_SIZE))
 
 typedef int Semaphore;
 typedef struct {

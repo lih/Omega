@@ -1,4 +1,5 @@
 #include <device/vga/attributes.h>
+#include <cpu/pervasives.h>
 
 VGAReg attributeMode = REG(ACR,0x30);
 VGAReg overscanIndex = REG(ACR,0x31);

@@ -1,6 +1,8 @@
-#include <device/timer.h>
 #include <core/schedule.h>
 #include <cpu/interrupt.h>
+#include <cpu/pervasives.h>
+#include <device/framebuffer.h>
+#include <device/timer.h>
 
 int millis = 0;
 int seconds = 0;

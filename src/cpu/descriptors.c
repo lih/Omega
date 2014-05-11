@@ -1,7 +1,7 @@
 #include <cpu/descriptors.h>
 #include <device/framebuffer.h>
 
-Descriptor idts[256] = { 0 };
+Descriptor idts[256] = { { } };
 
 Selector addDesc(TablePtr* tbl,Descriptor desc) {
   int index = (1+tbl->limit) / sizeof(Descriptor);
@@ -13,10 +13,10 @@ Selector addDesc(TablePtr* tbl,Descriptor desc) {
 }
 
 void* descBase(Descriptor d) {
-  return d.base_lo + (d.base_mi << 16) + (d.base_hi << 24);
+  return (void*)(d.base_lo + (d.base_mi << 16) + (d.base_hi << 24));
 }
 
-TSS tss(Dir* pageDir,dword eip,dword esp) {
+TSS tss(Dir* pageDir,void* eip,void* esp) {
   TSS ret = {
     .eflags = { 
       ._one = 1, ._zero = 0, ._zero2 = 0, ._zero3 = 0, ._zero4 = 0,
@@ -26,15 +26,15 @@ TSS tss(Dir* pageDir,dword eip,dword esp) {
     .fs = DATA_SEGMENT, .gs = DATA_SEGMENT, .ss = DATA_SEGMENT,
     .cr3 = (dword)pageDir,
     .trap = 0,
-    .eip = eip,
-    .esp = esp
+    .eip = (dword)eip,
+    .esp = (dword)esp
   };
 
   return ret;
 }
 
 Descriptor tssDesc(TSS* tss,byte busy) {
-  dword base = tss;
+#define base ((dword)tss)
   Descriptor ret = {
     .limit_lo = sizeof(TSS)-1,
     .base_lo = base,
@@ -50,6 +50,7 @@ Descriptor tssDesc(TSS* tss,byte busy) {
     .base_hi = base >> 24
   };
   return ret;
+#undef base
 }
 Descriptor taskGate(Selector tssSel,byte dpl) {
   Descriptor ret = {
@@ -62,8 +63,7 @@ Descriptor taskGate(Selector tssSel,byte dpl) {
   return ret;
 }
 Descriptor interruptGate(Selector cs,void* pbase,byte dpl) {
-  dword base = pbase;
-  
+#define base ((dword)pbase)
   Descriptor ret = {
     .limit_lo = base & 0xffff,
     .base_lo = cs,
@@ -76,4 +76,5 @@ Descriptor interruptGate(Selector cs,void* pbase,byte dpl) {
   ((word*)&ret)[3] = base >> 16;
     
   return ret;
+#undef base
 }

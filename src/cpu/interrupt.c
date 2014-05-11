@@ -9,7 +9,7 @@
 
 TablePtr idt = {
   .limit = 49*sizeof(Descriptor) - 1,
-  .base = &idts
+  .base = idts
 };
 
 char* descriptions[32] = {
@@ -72,8 +72,8 @@ void unhandledException();
 static void initExceptions() {
   require(&_schedule_);
 
-  TSS* t = EXC_STACK - sizeof(TSS);
-  *t = tss(kernelSpace.pageDir,unhandledException,EXC_STACK - sizeof(TSS));
+  TSS* t = (void*)EXC_STACK - sizeof(TSS);
+  *t = tss(kernelSpace.pageDir,unhandledException,t);
   Selector excGate = addDesc(&gdt,tssDesc(t,0));
   
   int i;
@@ -97,6 +97,7 @@ void handleException() {
 	   child,child->eax,child->ebx,child->ecx,child->edx,
 	   child->esp,child->ss,child->eip,child->cs);
 
+    while(1);
     asm __volatile__ ( "iret" );
   }
 }
@@ -104,8 +105,7 @@ void handleException() {
 void unhandledIRQ() {
   TSS* ss = TSS_AT(getTaskRegister());
   while(1) {
-    TSS* t = TSS_AT(ss->previousTask);
-
+    (void)ss;
     asm __volatile__ ( "iret" );
   }
 }
@@ -115,8 +115,8 @@ static void initIRQs() {
   require(&_schedule_);
   require(&_keyboard_);
 
-  TSS* irqTSS = IRQ_STACK - sizeof(TSS);
-  *irqTSS = tss(kernelSpace.pageDir,unhandledIRQ,IRQ_STACK - sizeof(TSS));
+  TSS* irqTSS = (void*)IRQ_STACK - sizeof(TSS);
+  *irqTSS = tss(kernelSpace.pageDir,unhandledIRQ,irqTSS);
   Selector irqGate = addDesc(&gdt,tssDesc(irqTSS,0));
 
   idts[32] = taskGate(scheduleGate,0);

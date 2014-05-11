@@ -1,4 +1,5 @@
 #include <device/vga/common.h>
+#include <cpu/pervasives.h>
 
 byte getVGAReg(VGAReg* r) {
   switch(r->addr) {
@@ -33,7 +34,5 @@ void setVGAReg(VGAReg* r,byte b) {
       outportb(r->data,b);
       newVal = inportb(r->data);
     }
-    if(newVal != b) 
-      printf("Couldn't write reg %x (oldVal=%x new=%x)\n",r->addr,b,newVal);
   } while(newVal != b);
 }

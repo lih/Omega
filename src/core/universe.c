@@ -3,6 +3,8 @@
 #include <core/universe.h>
 #include <core/schedule.h>
 #include <device/framebuffer.h>
+#include <cpu/syscall.h>
+#include <cpu/pervasives.h>
 
 #define F_PRESENT 1
 #define F_RW      2
@@ -87,7 +89,8 @@ void freeUniverse(Universe* u) {
   poolFree(&univPool,u);
 }
 
-DirEntry* dirVal(Dir* dir,dword vpage) {
+DirEntry* dirVal(Dir* dir,void* _vpage) {
+#define vpage ((dword)_vpage)
   word dirind = vpage >> 22;
   word pageind = (vpage >> 12) & 0x3ff;
   DirEntry* pgDir = (*dir) + dirind;
@@ -96,6 +99,7 @@ DirEntry* dirVal(Dir* dir,dword vpage) {
     *pgDir = ((dword)newDir()) | PD_FLAGS;
     
   return F_ADDR(*pgDir) + pageind;
+#undef vpage
 }
 static void initUniverse() {
   require(&_memory_);
@@ -124,12 +128,12 @@ Feature _universe_ = {
   .label = "universe",
   .initialize = &initUniverse
 };
-void mapPage(Universe* univ,dword vpage,void* page,byte rw) {
+void mapPage(Universe* univ,void* vpage,void* page,byte rw) {
   Dir* pgDir = univ->pageDir;
   DirEntry* oldmap = dirVal(pgDir,vpage);
   
   if(*oldmap != 0) {
-    DirEntry* oldCounter = dirVal(pageCounters,*oldmap);
+    DirEntry* oldCounter = dirVal(pageCounters,(void*)*oldmap);
     
     (*oldCounter)--;
     
@@ -137,7 +141,7 @@ void mapPage(Universe* univ,dword vpage,void* page,byte rw) {
       freePage(F_ADDR(*oldmap));
   }
   
-  page = (dword)page & 0xfffff000;
+  page = (void*)((dword)page & 0xfffff000);
 
   if(IS(page,NULL))
     *oldmap = 0;

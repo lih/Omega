@@ -20,9 +20,10 @@ extern Universe rootSpace;
 #define F_ADDR(n) ((DirEntry*)(((dword)n)&0xfffff000))
 
 Universe* newUniverse(Universe* father);
+void      freeUniverse(Universe*);
 
-void      mapPage(Universe* univ,dword vpage,void* page,byte rw);
-DirEntry* dirVal(Dir*,dword);
+void      mapPage(Universe* univ,void* vpage,void* page,byte rw);
+DirEntry* dirVal(Dir*,void*);
 
 #endif
 

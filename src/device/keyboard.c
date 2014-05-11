@@ -1,7 +1,9 @@
 #include <core/feature.h>
-#include <cpu/pervasives.h>
-#include <cpu/interrupt.h>
 #include <cpu/descriptors.h>
+#include <cpu/interrupt.h>
+#include <cpu/pervasives.h>
+#include <cpu/syscall.h>
+#include <device/framebuffer.h>
 #include <device/vga.h>
 
 Selector keyboardGate;
@@ -56,8 +58,8 @@ char layout[128] = {
 static void initKeyboard() {
   require(&_universe_);
 
-  TSS* keyTSS = KEY_STACK-sizeof(TSS);
-  *keyTSS = tss(kernelSpace.pageDir,handleKeyboard,KEY_STACK-sizeof(TSS));
+  TSS* keyTSS = (void*)KEY_STACK-sizeof(TSS);
+  *keyTSS = tss(kernelSpace.pageDir,handleKeyboard,keyTSS);
   keyboardGate = addDesc(&gdt,tssDesc(keyTSS,0));
 }
 Feature _keyboard_ = {
@@ -70,8 +72,6 @@ byte ctrl = 0, shift = 0, alt = 0;
 char currentChar;
 
 void handleKeyboard() {
-  TSS* ss = TSS_AT(getTaskRegister());
-
   while(1) {
     byte scan = inportb(0x60);
 

@@ -6,6 +6,7 @@
 #include <device/framebuffer.h>
 #include <core/feature.h>
 #include <device/timer.h>
+#include <cpu/pervasives.h>
 
 Pool taskPool = { NULL, sizeof(Task) };
 
@@ -19,7 +20,7 @@ Task activeRoot = {
   .next = &activeRoot,
   .prev = &activeRoot,
   .univ = &kernelSpace,
-  .tss = KERNEL_STACK,
+  .tss = (TSS*)KERNEL_STACK,
   .slot = 0
 };
 Task pendingRoot = {
@@ -33,19 +34,21 @@ Task waitingRoot = {
 
 void schedule();
 
+Dir* newDir();
+
 static void initSchedule() {
   require(&_memory_);
   require(&_universe_);
 
   taskDirectory = newDir();
-  *dirVal(taskDirectory,activeRoot.tss) = &activeRoot;
+  *dirVal(taskDirectory,activeRoot.tss) = (DirEntry)&activeRoot;
   slaveGate = addDesc(&gdt,tssDesc(activeRoot.tss,0));
   *(activeRoot.tss) = tss(kernelSpace.pageDir,0,0);
 
   Task* scheduleTask = poolAlloc(&taskPool);
 
-  scheduleTask->tss = INT_STACK - sizeof(TSS);
-  *(scheduleTask->tss) = tss(kernelSpace.pageDir,schedule,INT_STACK - sizeof(TSS));
+  scheduleTask->tss = (void*)INT_STACK - sizeof(TSS);
+  *(scheduleTask->tss) = tss(kernelSpace.pageDir,schedule,scheduleTask->tss);
   scheduleGate = addDesc(&gdt,tssDesc(scheduleTask->tss,0));
   
   flushGDT();
@@ -60,7 +63,7 @@ Feature _schedule_ = {
 
 Task* getTask(Selector gate) {
   TSS* tss = descBase(DESCRIPTOR_AT(gdt,gate));
-  Task** task = dirVal(taskDirectory,tss);
+  Task** task = (Task**)dirVal(taskDirectory,tss);
   
   return *task;
 }
@@ -168,7 +171,7 @@ void releaseSem(Semaphore* paddr,int n) {
 
 void sys_spark(Task* task) {
   Universe* univ = univAt(task,task->tss->ebx);
-  dword eip = task->tss->ecx;
+  void* eip = (void*)task->tss->ecx;
 
   int slot = findNextSlot();
   dword vaddr = STACK_START(slot);
@@ -181,11 +184,11 @@ void sys_spark(Task* task) {
   }
   
   Task* newtask = poolAlloc(&taskPool); {
-    newtask->tss = vaddr-sizeof(TSS);
-    *(newtask->tss) = tss(univ->pageDir,eip,vaddr-sizeof(TSS));
+    newtask->tss = (void*)vaddr-sizeof(TSS);
+    *(newtask->tss) = tss(univ->pageDir,eip,newtask->tss);
     newtask->tss->eflags._if = 1;
     newtask->tss->eflags.iopl = univ->dpl;
-    *dirVal(taskDirectory,newtask->tss) = newtask;
+    *dirVal(taskDirectory,newtask->tss) = (DirEntry)newtask;
 
     insertTask(newtask,&activeRoot);
     newtask->slot = slot;
@@ -210,24 +213,24 @@ void sys_warp(Task* task) {
 
   int i;
   for(i=0;i<STACK_PAGES;i++) {
-    dword vaddr = STACK_PAGE(start,i);
-    dword* page = dirVal(task->univ->pageDir,vaddr);
+    void* vaddr = STACK_PAGE(start,i);
+    void** page = (void**)dirVal(task->univ->pageDir,vaddr);
     mapPage(u,vaddr,*page,1);
     mapPage(task->univ,vaddr,0,0);
   }
 
   task->tss->eip = eip;
   task->tss->esp = start;
-  task->tss->cr3 = u->pageDir;
+  task->tss->cr3 = (dword)u->pageDir;
   task->tss->eflags.iopl = u->dpl;
   task->from = task->univ;
   task->univ = u;
 }
 void sys_acquire(Task* task) {
-  dword vaddr = task->tss->ebx;
+  void* vaddr = (void*)task->tss->ebx;
 
   DirEntry* d = dirVal(task->univ->pageDir,vaddr);
-  Semaphore* paddr = ((dword)F_ADDR(*d)) | (vaddr & 0xfff);
+  Semaphore* paddr = (Semaphore*)(((dword)F_ADDR(*d)) | ((dword)vaddr & 0xfff));
 
   if(*paddr == 0) {
     task->trig.sem = paddr;
@@ -240,18 +243,18 @@ void sys_acquire(Task* task) {
 }
 
 void sys_release(Task* task) {
-  dword vaddr = task->tss->ebx;
+  void* vaddr = (void*)task->tss->ebx;
   int n = task->tss->ecx;
 
   DirEntry* d = dirVal(task->univ->pageDir,vaddr);
-  Semaphore* paddr = ((void*)F_ADDR(*d)) + (vaddr & 0xfff);
+  Semaphore* paddr = (Semaphore*)(((void*)F_ADDR(*d)) + ((dword)vaddr & 0xfff));
   
   releaseSem(paddr,n);
 }
 void sys_mapTo(Task* task) {
   Universe* dest = univAt(task,task->tss->ebx);
-  dword from = task->tss->ecx;
-  dword to = task->tss->edx;
+  void* from = (void*)task->tss->ecx;
+  void* to = (void*)task->tss->edx;
 
   if(!IS(dest,NULL)) {
     DirEntry* d = dirVal(task->univ->pageDir,from);
@@ -262,8 +265,8 @@ void sys_mapTo(Task* task) {
 }
 void sys_mapFrom(Task* task) {
   Universe* dest = univAt(task,task->tss->ebx);
-  dword from = task->tss->ecx;
-  dword to = task->tss->edx;
+  void* from = (void*)task->tss->ecx;
+  void* to = (void*)task->tss->edx;
 
   if(!IS(dest,NULL)) {
     DirEntry* d = dirVal(dest->pageDir,from);
@@ -297,7 +300,7 @@ void sys_wait(Task* task) {
   }
 }
 void sys_alloc(struct Task* t) {
-  dword vpage = t->tss->ebx;
+  void* vpage = (void*)t->tss->ebx;
   int n = t->tss->ecx;
 
   int i;

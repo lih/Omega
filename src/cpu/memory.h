@@ -19,6 +19,7 @@ typedef union page {
 #define SET_STRUCT(t,v,...) { t __tmp__ = __VA_ARGS__; v = __tmp__; }
 #define AS(t,e) (*(t*)(&(e)))
 #define SZ(a) (sizeof(a)/sizeof((a)[0]))
+#define AFTER(e) (((void*)(e))+sizeof(*(e)))
 
 extern Feature _memory_;
 extern int page_count;

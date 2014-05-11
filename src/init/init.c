@@ -5,6 +5,7 @@
 #include <device/vga.h>
 #include <init/ping.h>
 #include <init/repl.h>
+#include <cpu/pervasives.h>
 
 #define TRI(x) (x + (x<<2) + (x<<4))
 #define DUB(x) (x + ((x&0xc)<<2))
@@ -26,7 +27,7 @@ void vgaTest() {
   while(1) {
     dword* cur;
     dword col = color + (color << 8) + (color << 16) + (color << 24);
-    for(cur=VGA_START;cur<VGA_END;cur++)
+    for(cur=(dword*)VGA_START;cur<(dword*)VGA_END;cur++)
       *cur = col;
     syscall_acquire(&colorSem);
   }

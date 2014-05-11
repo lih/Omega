@@ -40,7 +40,7 @@
 #define BIOS_MODE03H 0
 #define BIOS_MODE13H 1
 
-extern void KERNEL_END;
+extern char KERNEL_END;
 extern int const KERNEL_SIZE;
 
 #endif

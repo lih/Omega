@@ -1,5 +1,6 @@
 #include <device/acpi.h>
 #include <device/framebuffer.h>
+#include <cpu/pervasives.h>
 
 RSDP* rsdp;
 FADT* fadt;
@@ -29,17 +30,18 @@ void shutdown() {
 }
 RSDP* findRSDP() {
   byte rsdHeader[8] = { 'R', 'S', 'D', ' ', 'P', 'T', 'R', ' ' };
-  dword* hdr = &rsdHeader;
+  dword* hdr = (dword*)&rsdHeader;
   dword* i;
 
-  for(i=0;i<4096;i+=(16/sizeof(*i)))
+  for(i=0;i<(dword*)4096;i+=(16/sizeof(*i)))
     if(i[0] == hdr[0] && i[1] == hdr[1])
-      return i;
-  for(i=0xe0000;i<0x100000;i+=16/(sizeof(*i)))
+      return (RSDP*)i;
+  for(i=(dword*)0xe0000;i<(dword*)0x100000;i+=16/(sizeof(*i)))
     if(i[0] == hdr[0] && i[1] == hdr[1])
-      return i;
+      return (RSDP*)i;
 
   printf("ACPI header not found.\n");
+  return NULL;
 }
 SDTable* findSDTable(char* sig) {
   SDTable* rsdt = rsdp->rsdt;
@@ -47,10 +49,9 @@ SDTable* findSDTable(char* sig) {
   int len = (rsdt->length - sizeof(*rsdt)) / sizeof(*sdts);
 
   int i;
-  for(i=0;i<len;i++) {
-    if(AS(dword,sdts[i]->signature) == AS(dword,*sig))
-      return &sdts[i];
-  }
+  for(i=0;i<len;i++)
+    if(sdts[i]->signature.asN == AS(dword,*sig))
+      return sdts[i];
       
   return 0;
 }

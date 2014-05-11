@@ -2,6 +2,8 @@
 #include <cpu/syscall.h>
 #include <cpu/descriptors.h>
 #include <core/schedule.h>
+#include <cpu/pervasives.h>
+#include <device/framebuffer.h>
 
 Selector sysGate;
 
@@ -52,8 +54,8 @@ static void initialize() {
   require(&_schedule_);
   require(&_irqs_);
 
-  TSS* systss = SYS_STACK - sizeof(TSS);
-  *systss = tss(kernelSpace.pageDir,handleSyscalls,SYS_STACK - sizeof(TSS));
+  TSS* systss = (void*)SYS_STACK - sizeof(TSS);
+  *systss = tss(kernelSpace.pageDir,handleSyscalls,systss);
   sysGate = addDesc(&gdt,tssDesc(systss,0));
 
   flushGDT();

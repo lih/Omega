@@ -82,6 +82,6 @@ Descriptor tssDesc(TSS* tss,byte busy);
 Descriptor taskGate(Selector tssSel,byte dpl);
 Descriptor interruptGate(Selector sel,void* offset,byte dpl);
 
-TSS tss(Dir* pageDir,dword eip,dword esp);
+TSS tss(Dir* pageDir,void* eip,void* esp);
 
 #endif

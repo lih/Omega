@@ -24,8 +24,8 @@ void bios_mode13h();
 void bios_mode03h();
 
 void	  syscall_die		();
-void	  syscall_spark		(UIndex u,dword eip);
-void	  syscall_warp		(UIndex u,dword eip);
+void	  syscall_spark		(UIndex u,void* eip);
+void	  syscall_warp		(UIndex u,void* eip);
 void	  syscall_alloc		(void* page,int n);
 Semaphore syscall_acquire	(Semaphore* addr);
 void	  syscall_release	(Semaphore* addr,int n);

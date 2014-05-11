@@ -60,7 +60,7 @@ typedef struct {
 
 typedef struct {
   byte hTotal, endHDisplay, startHBlanking, startHRetrace;
-  VGAReg vTotal, endVDisplay, startVBlanking, endVBlanking, startVRetrace;
+  byte vTotal, endVDisplay, startVBlanking, endVBlanking, startVRetrace;
   EndHBlanking endHBlanking;
   EndHRetrace endHRetrace;
   EndVRetrace endVRetrace;

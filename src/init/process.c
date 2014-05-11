@@ -19,11 +19,11 @@ static void initialize() {
 
   initUniv->dpl = 3;
   void* vpage;
-  for(vpage = KERNEL_START & 0xfffff000;vpage < &KERNEL_END;vpage+=PAGE_SIZE)
+  for(vpage = (void*)(KERNEL_START & 0xfffff000);vpage < (void*)&KERNEL_END;vpage+=PAGE_SIZE)
     mapPage(initUniv,vpage,vpage,1);
-  for(vpage = FB_MEM & 0xfffff000;vpage < FB_END;vpage+=PAGE_SIZE)
+  for(vpage = (void*)(FB_MEM & 0xfffff000);vpage < (void*)FB_END;vpage+=PAGE_SIZE)
     mapPage(initUniv,vpage,vpage,1);
-  for(vpage = VGA_START & 0xfffff000;vpage < VGA_END;vpage+=PAGE_SIZE)
+  for(vpage = (void*)(VGA_START & 0xfffff000);vpage < (void*)VGA_END;vpage+=PAGE_SIZE)
     mapPage(initUniv,vpage,vpage,1);
   MAP_STACK(initUniv,EXC_STACK);
   MAP_STACK(initUniv,INT_STACK);

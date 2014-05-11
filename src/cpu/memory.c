@@ -6,7 +6,7 @@ page* page_head;
 int page_count;
 
 void* allocatePage() {
-  void* ret;
+  void* ret = NULL;
   if(page_head != NULL) {
     ret = page_head;
     page_head = page_head->next;
@@ -40,7 +40,7 @@ static void initialize() {
     page* current = (page*)(entries[i].base_lo & ~(PAGE_SIZE-1));
     dword end = ((dword)current) + entries[i].length_lo;
 
-    if(current < HEAP_START)  current = HEAP_START;
+    if(current < (page*)HEAP_START)  current = (page*)HEAP_START;
     
     while(((dword)current) < end) {
       current->next = page_head;

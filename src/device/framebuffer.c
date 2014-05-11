@@ -1,17 +1,18 @@
+#include <device/framebuffer.h>
 #include <cpu/memory.h>
+#include <constants.h>
+#include <cpu/pervasives.h>
 
-#define FB_MEM ((void*)0xB8000)
-#define FB_END ((void*)0xB8FA0)
 #define LINE_SIZE (80*2)
 
 static char* current;
 char charMode = 0x0B;
 
 static void scroll() {
-  while(current >= FB_END) {
-    word* src = FB_MEM+LINE_SIZE;
-    word* dst = FB_MEM;
-    while(src < FB_END) {
+  while(current >= (char*)FB_END) {
+    word* src = (void*)FB_MEM+LINE_SIZE;
+    word* dst = (void*)FB_MEM;
+    while(src < (word*)FB_END) {
       *dst = *src; 
       *src = (charMode<<8) + ' ';
       dst++; src++;
@@ -23,7 +24,6 @@ static void scroll() {
 void putChar(char c) {
   switch(c) {
   case '\n': {
-    int i; 
     char* end = current + LINE_SIZE;
     end -= (end-(char*)FB_MEM) % LINE_SIZE;
     for(;current<end;current+=2) {
@@ -113,15 +113,15 @@ void printf(char* f,...) {
 }
 
 void clearFB() {
-  for(current=FB_MEM;current<FB_END;current+=2) {
+  for(current=(char*)FB_MEM;current<(char*)FB_END;current+=2) {
     *current = ' ';
     *(current+1) = charMode;
   }
-  current=FB_MEM;
+  current=(char*)FB_MEM;
 }
 
 void setCursor() {
-  dword temp = (((void*)current) - FB_MEM) / 2;
+  dword temp = (current - (char*)FB_MEM) / 2;
 
   /* This sends a command to indicies 14 and 15 in the
    *  CRT Control Register of the VGA controller. These

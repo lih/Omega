@@ -1,13 +1,15 @@
 #include <constants.h>
+#include <core/feature.h>
+#include <cpu/interrupt.h>
+#include <cpu/pervasives.h>
+#include <cpu/syscall.h>
+#include <device/acpi.h>
 #include <device/framebuffer.h>
 #include <device/keyboard.h>
-#include <device/acpi.h>
-#include <core/feature.h>
 #include <device/timer.h>
-#include <init/process.h>
-#include <cpu/syscall.h>
-#include <init/init.h>
 #include <device/vga.h>
+#include <init/init.h>
+#include <init/process.h>
 
 int running = 0; 
 
@@ -15,7 +17,7 @@ int running = 0;
 #define GREEN charMode = 0x02;
 #define CLEAR charMode = 0x0b;
 
-void main () {
+int main () {
   clearFB();
 
   CLEAR printf("Loaded %d sectors (%d bytes) for the kernel\n",(KERNEL_SIZE+0x1ff)>>9,KERNEL_SIZE);
@@ -36,6 +38,8 @@ void main () {
   syscall_spark(initUniv->index,&init);
 
   while(1) nop();
+
+  return 0;
 }
 
 

@@ -13,7 +13,10 @@ typedef struct {
   struct SDTable* rsdt;
 } RSDP;
 typedef struct SDTable {
-  char signature[4];
+  union {
+    char asS[4];
+    dword asN;
+  } signature;
   dword length;
   byte revision;
   byte checksum;

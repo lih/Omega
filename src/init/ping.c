@@ -2,7 +2,7 @@
 #include <cpu/syscall.h>
 #include <device/framebuffer.h>
 
-dword pingsem = 1, pongsem = 0;
+Semaphore pingsem = 1, pongsem = 0;
 int nping = 0;
 #define MAXPING 5
 

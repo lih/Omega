@@ -111,8 +111,6 @@ void handleKeyboard() {
 	  charSem = 0;
 	  break;
 	}
-	else
-	  printf("Unassociated scan code %d\n",scan);
       }
 
       setCursor();

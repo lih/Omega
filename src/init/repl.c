@@ -26,25 +26,28 @@ void runCmd(char* buf) {
     syscall_bios(BIOS_MODE03H);
 }
 
-#define IDENT ident(pstate)
-char* ident(PState* pstate) {
+int identEq(PState* pstate) {
   char* start = &CUR;
-  while(CUR != '\0' && CUR != ' ' && CUR != '\t' && CUR != '=') FORWARD;
-  char* end = &CUR;
-  FREE;
-  if(CUR=='=') {
+  int ret = 0;
+  while(CUR != '=' && (classes[CUR] == REGULAR || classes[CUR] == DIGIT))
     FORWARD;
-    int l = end - start;
-    char* ret = newArray(l+1);
-    memcpy(ret,start,l);
-    ret[l] = '\0';
-    return ret;
+ 
+  char* end = &CUR;
+  if(start != end) {
+    FREE; if(CUR != '=') {
+      pstate->str = start;
+      return 0;
+    }
+    FORWARD;
+    char old = *end;
+    *end='\0';
+    ret = strlen(start);
+    *end=old;
   }
-  else {
-    pstate->str = start;
-    return NULL;
-  }
+  return ret;
 }
+#undef IDENT
+#define IDENT identEq(pstate)
 
 Value* disowned(Value* v) {
   v->owned = 0;
@@ -119,23 +122,28 @@ void repl() {
     };
 #define pstate (&st)
     FREE;
-    char* var = IDENT;
+    char* vstart = &CUR;
+    int vsize = IDENT;
     FREE;
     Thunk* t = EXPR;
-#undef pstate
     if(t != NULL) {
       showVal(force(t)); putChar('\n');
-      if(var != NULL) {
-	define(var,t);
-	/* printf("Defined '%s' at %x\n",var,t); */
+      if(vsize > 0) {
+	char old = vstart[vsize];
+	vstart[vsize] = '\0';
+	define(vstart,t);
+	vstart[vsize] = old;
       }
-      else 
+      else
 	freeThunk(t);
+      
+      /* printf("Defined '%s' at %x\n",var,t); */
     }
     else 
       printf("Couldn't understand the expression '%s'\n",buf);
 
     runCmd(buf);
+#undef pstate
   }
 }
 

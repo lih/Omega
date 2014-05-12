@@ -5,13 +5,36 @@
 
 #define INRANGE(a,b,x) ((a) <= (x) && (x) <= (b))
 
+CharClass classes[128] = {
+  ['(']=OPAREN, [')']=CPAREN, ['[']=OPAREN, [']']=CPAREN,
+  [' ']=SPACE, ['\t']=SPACE,
+  ['\0']=END,
+  ['0']=DIGIT, ['1']=DIGIT, ['2']=DIGIT, ['3']=DIGIT, ['4']=DIGIT,
+  ['5']=DIGIT, ['6']=DIGIT, ['7']=DIGIT, ['8']=DIGIT, ['9']=DIGIT,
+  ['"']=QUOTE, ['\'']=QUOTE
+};
+
 void spaces(PState* pstate) {
-  while(CUR == ' ' || CUR == '\t' || CUR == '\0') FORWARD;
+  while(classes[CUR] == SPACE) FORWARD;
+}
+Thunk* ident(PState* pstate) {
+  char* start = &CUR;
+  while(classes[CUR] == REGULAR || classes[CUR] == DIGIT)
+    FORWARD;
+
+  if(&CUR > start) {
+    char old = CUR;
+    CUR = '\0';
+    Thunk* n = lookup(&rootThunk,start);
+    CUR = old;
+    return n;
+  }
+  else
+    return pure(nil());
 }
 Thunk* expr(PState* pstate) {
-  switch(CUR) {
-  case '[': 
-  case '(': {
+  switch(classes[CUR]) {
+  case OPAREN: { 
     char start = CUR;
     Value* thunks = newArray(sizeof(Value) + sizeof(Array) + 16*sizeof(Thunk*));
     thunks->shape = ARRAY;
@@ -21,6 +44,7 @@ Thunk* expr(PState* pstate) {
     
     int n = 0;
     FORWARD; FREE;
+    pstate->depth++;
     do {
       Thunk* sub = EXPR; FREE;
       if(sub == NULL)
@@ -30,11 +54,11 @@ Thunk* expr(PState* pstate) {
     } while(CUR != ']');
     arr->size = n;
     FORWARD;
-    
+    pstate->depth--;
+        
     return (start=='[' ? ret : eval(ret));
   }
-  case ']':
-  case ')': {
+  case CPAREN: {
     if(pstate->depth == 0) {
       FORWARD;
       return EXPR;
@@ -42,44 +66,29 @@ Thunk* expr(PState* pstate) {
     else
       return NULL;
   }
-  case '\0':
-    return NULL;
-  default: {
-    if(INRANGE('0','9',CUR)) {
-      int ret = CUR - '0';
+  case DIGIT: {
+    int ret = CUR - '0';
+    FORWARD;
+    while(classes[CUR]==DIGIT) {
+      ret = ret*10 + (CUR-'0');
       FORWARD;
-      while(INRANGE('0','9',CUR)) {
-	ret = ret*10 + (CUR-'0');
-	FORWARD;
-      }
-      return pure(number(ret));
     }
-    else if(CUR == '"') {
-      FORWARD;
-      char *start = &CUR;
-      while(CUR != '"' && CUR != '\0') {
-	if(CUR == '\\')
-	  FORWARD;
-	FORWARD;
-      }
-      CUR = '\0';
-      Thunk* ret = pure(string(start));
-      FORWARD;
-      return ret;
-    }
-    else {
-      char* start = &CUR;
-      while(CUR != '(' && CUR != ')' && CUR != '[' && CUR != ']' 
-	    && CUR != ' ' && CUR != '\t' && CUR != '\0') 
-	FORWARD;
-      char old = CUR;
-      CUR = '\0';
-      Thunk* n = lookup(&rootThunk,start);
-      CUR = old;
-      
-      return n;
-    }
+    return pure(number(ret));
   }
+  case QUOTE: {
+    FORWARD;
+    char *start = &CUR;
+    while(!(classes[CUR] == QUOTE || classes[CUR] == END)) {
+      if(CUR == '\\') FORWARD;
+      FORWARD;
+    }
+    CUR = '\0';
+    Thunk* ret = pure(string(start));
+    FORWARD;
+    return ret;
+  }
+  case REGULAR: return IDENT;
+  default: return NULL;
   }
 }
 

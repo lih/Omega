@@ -1,5 +1,5 @@
 #include <constants.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <cpu/descriptors.h>
 #include <core/schedule.h>
 #include <core/universe.h>

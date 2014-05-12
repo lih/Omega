@@ -1,7 +1,7 @@
 #ifndef INCLUDED_DESCRIPTORS
 #define INCLUDED_DESCRIPTORS
 
-#include <cpu/memory.h>
+#include <util/memory.h>
 
 typedef word Selector;
 typedef dword DirEntry;

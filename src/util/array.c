@@ -1,6 +1,6 @@
 #include <util/array.h>
 #include <util/pool.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 
 Pool smallPools[] = {
   { 0 , 4 },

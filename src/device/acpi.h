@@ -2,7 +2,7 @@
 #define INCLUDED_ACPI
 
 #include <constants.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <core/feature.h>
 
 typedef struct {

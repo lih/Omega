@@ -1,6 +1,6 @@
 #include <init/init.h>
 #include <device/framebuffer.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <device/keyboard.h>
 #include <device/vga.h>
 #include <init/ping.h>

@@ -1,7 +1,7 @@
 #ifndef INCLUDED_PERVASIVES
 #define INCLUDED_PERVASIVES
 
-#include <cpu/memory.h>
+#include <util/memory.h>
 
 void	shutdown();
 void	nop();

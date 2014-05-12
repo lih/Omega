@@ -1,5 +1,5 @@
 #include <device/framebuffer.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <constants.h>
 #include <cpu/pervasives.h>
 
@@ -32,6 +32,10 @@ void putChar(char c) {
     }
     break;
   }
+  case '\b':
+    current-=2;
+    *current = ' ';
+    break;
   case '\0':
     break;
   default:

@@ -1,7 +1,7 @@
 #ifndef INCLUDED_POOL
 #define INCLUDED_POOL
 
-#include <cpu/memory.h>
+#include <util/memory.h>
 
 void* poolAllocU(Pool* pool);
 void poolFreeU(Pool* pool,void* p);

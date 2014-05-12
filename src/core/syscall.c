@@ -1,5 +1,5 @@
 #include <cpu/interrupt.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <cpu/descriptors.h>
 #include <core/schedule.h>
 #include <cpu/pervasives.h>

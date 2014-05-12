@@ -1,7 +1,7 @@
 #ifndef INCLUDED_VGA_COMMON
 #define INCLUDED_VGA_COMMON
 
-#include <cpu/memory.h>
+#include <util/memory.h>
 
 typedef struct {
   word addr,index,data;

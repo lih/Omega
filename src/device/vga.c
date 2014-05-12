@@ -1,5 +1,5 @@
 #include <device/vga.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <device/framebuffer.h>
 #include <cpu/pervasives.h>
 

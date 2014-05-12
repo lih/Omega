@@ -1,9 +1,9 @@
 #include <constants.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <core/universe.h>
 #include <core/schedule.h>
 #include <device/framebuffer.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <cpu/pervasives.h>
 
 #define F_PRESENT 1

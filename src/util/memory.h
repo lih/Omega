@@ -27,9 +27,12 @@ extern int page_count;
 void* allocatePage();
 void freePage(void*);
 
+void memcpy(void* dst, void* src, int n);
+int strlen(char* s);
+
 /* 
    Allocation pools of fixed-size objects (with constant-time
-   alloc() and free()).
+   alloc() and free() operations).
 */
 typedef union PoolBlock {
   union PoolBlock* next;

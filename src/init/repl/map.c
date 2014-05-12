@@ -1,10 +1,13 @@
 #include <init/repl/map.h>
 #include <util/pool.h>
 #include <device/framebuffer.h>
+#include <util/memory.h>
+#include <util/array.h>
 
 MapNode voidNode = {
   .left = EMPTY, .right = EMPTY, .height = 0
 };
+Map rootNode = EMPTY;
 Pool nodePool = { 0, sizeof(MapNode) };
 
 int strcmp(char* s1,char* s2) {
@@ -36,13 +39,24 @@ void setHeight(Map n) {
     n->height = n->right->height+1;
 }
 
+void define(char* key,Thunk* t) {
+  MapNode* n = getNode(&rootNode,key);
+  replace(n->t,t);
+  n->t = t;
+}
+
 MapNode* getNode(MapNode** root,char* key) {
 #define rootp (*root)
   if(rootp == EMPTY) {
     rootp = poolAllocU(&nodePool);
+    int l = strlen(key);
+    char* newKey = newArray(l+1);
+    memcpy(newKey,key,l+1);
     SET_STRUCT(MapNode,*rootp,{ 
-	.key = key, .left = &voidNode, .right = &voidNode, .height = 1, .t = pure(nil())
+	.key = newKey, .left = &voidNode, .right = &voidNode, .height = 1, .t = pure(nil())
 	  });
+
+    plant(rootp->t);
     return rootp;
   }
 

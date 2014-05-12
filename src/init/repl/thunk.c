@@ -2,104 +2,131 @@
 #include <device/framebuffer.h>
 #include <util/array.h>
 #include <util/pool.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 
 #define MAX_DEPTH 10000000
-
-void freeThunk(Thunk*);
-
-void memcpy(byte* dst_,byte *src_,int n) {
-  dword *src = (void*)src_,*dst = (void*)dst_;
-  dword* end = src+(n>>2);
-  
-  while(src != end) {
-    *dst = *src; src++; dst++;
-  }
-  int i;
-  for(i=0;i<(n&3);i++)
-    ((byte*)dst)[i] = ((byte*)src)[i];
-}
-int strlen(char* s) {
-  char* c = s;
-  while(*c != '\0') c++;
-  return c-s;
-}
+#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
+#define NEXTDEPTH(n) min(MAX_DEPTH,(n)+1)
 
 Pool linkPool = { 0, sizeof(Link) };
 Pool thunkPool = { 0, sizeof(Thunk) };
-Pool numPool = { 0, sizeof(Value) + sizeof(int) };
-Value nilVal = { .shape = NIL };
+Thunk rootThunk = {
+  .state = PURE,
+  .depth = 0,
+  .pureVal = NULL,
+  .ring = {
+    .cRight = &rootThunk.ring,
+    .pRight = &rootThunk.ring,
+    .cLeft = &rootThunk.ring,
+    .pLeft = &rootThunk.ring,
+  }
+};
 
-void rebase(Thunk* t,int depth);
-int parentDepth(Thunk* t);
+static void debase(Thunk* t,int depth);
+static int parentDepth(Thunk* t);
+static void invalidate(Thunk* t);
 
-void nothing(struct Thunk* _) { }
+static void nothing(Thunk*);
+static void mkArray(Thunk*);
+static void evaluate(Thunk*);
+
 Thunk* newThunk() {
   Thunk* ret = poolAllocU(&thunkPool);
-  ret->depth = 0;
   Link* ring = &ret->ring;
   ring->cRight = ring; 
   ring->pRight = ring; 
   ring->cLeft = ring;
   ring->pLeft = ring; 
+  ret->depth = MAX_DEPTH;
   ret->pureVal = NULL;
   ret->initializer = nothing;
   return ret;
 }
+void freeThunk(Thunk* t) {
+  if(parentDepth(t) > t->depth || t->depth >= MAX_DEPTH) {
+    /* 
+       If none of our parents lead to the root, then we are the root of a cycle 
+       or have no parents.
+    */
+    printf("Freeing thunk at %x (depth %d)\n",t,t->depth);
 
-Value* number(int n) {
-  Value* ret = poolAllocU(&numPool);
-  ret->shape = NUMBER;
+    Link *child;
+    FORRING(child,t->ring,c) {
+      DETACH(child,p);
+      debase(child->down,NEXTDEPTH(t->depth));
+      freeThunk(child->down);
+    }
+    while(t->ring.cRight != &t->ring) {
+      child = t->ring.cRight;
+      t->ring.cRight = child->cRight;
+      poolFreeU(&linkPool,child);
+    }
+    if(t->pureVal != NULL
+       && (t->initializer != evaluate
+	   || !(t->pureVal->copy))) freeValue(t->pureVal);
+    poolFreeU(&thunkPool,t);
+  }
+}
 
-  int* v = (int*)&ret->data;
-  *v = n;
+Thunk* pure(Value* v) {
+  Thunk* ret = newThunk();
+  ret->state = PURE;
+  ret->pureVal = v;
+  if(v->shape == ARRAY) {
+    int i;
+    Array* arr = AFTER(v);
+    ret->initializer = mkArray;
+    for(i=0;i<arr->size;i++) 
+      link(ret,arr->data[i]);
+  }
   return ret;
 }
-Value* string(char* s) {
-  int l = strlen(s);
-  Value* ret = newArray(sizeof(Value) + sizeof(String) + l + 1);
-  ret->shape = STRING;
-
-  String* str = AFTER(ret);
-  str->sz = l;
-  memcpy(AFTER(str),(byte*)s,l+1);
-   
+Thunk* eval(Thunk* t) {
+  Thunk* ret = newThunk();
+  ret->state = THUNK;
+  ret->initializer = evaluate;
+  link(ret,t);
   return ret;
 }
-Value* array(int n,...) {
-  Thunk** args = AFTER(&n);
-  Value* ret = newArray(sizeof(Value) + sizeof(Array) + n*sizeof(Thunk*));
-  ret->shape = ARRAY;
 
-  Array* arr = AFTER(ret);
-  int i;
-  arr->size = n;
-  for(i=0;i<n;i++)
-    arr->data[i] = args[i];
-
-  return ret;
-}
-Value* func(Function f) {
-  Value* ret = poolAllocU(&numPool);
-  ret->shape = FUNCTION;
-  Function* f2 = AFTER(ret);
-  *f2 = f;
-  return ret;
-}
-Value* nil() {
-  return &nilVal;
-}
-
-void freeValue(Value* v) {
-  switch(v->shape) {
-  case NUMBER:
-  case FUNCTION:
-    poolFreeU(&numPool,v);
+Value* force(Thunk* t) {
+  switch(t->state) {
+  case THUNK: {
+    t->state = LOCKED;
+    t->initializer(t);
+    t->state = PURE;
     break;
-  case NIL:
-    break;
+  }
+  case LOCKED:
+    printf("Locked block\n");
+    while(1); /* We loop for now when encountering a locked thunk. */
   default:
-    freeArray(v);
+    break;
+  }
+  return t->pureVal;
+}
+
+void plant(Thunk* t) {
+  link(&rootThunk,t);
+  rebase(t,1);
+}
+
+void replace(Thunk* old,Thunk* new) {
+  if(old != new) {
+    invalidate(old);
+  
+    Link* parent;
+    Link* next;
+    for(parent = old->ring.pRight; parent != &old->ring;parent = next) {
+      next = parent->pRight;
+      DETACH(parent,p);
+      ATTACH(parent,&new->ring,p);
+      parent->down = new;
+    }
+
+    rebase(new,parentDepth(new));
+    freeThunk(old);
   }
 }
 
@@ -111,102 +138,17 @@ void link(Thunk* f,Thunk* s) {
   l->up = f; 
   ATTACH(l,&f->ring,c);
 }
-Thunk* pure(Value* v) {
-  Thunk* ret = newThunk();
-  ret->state = PURE;
-  ret->pureVal = v;
-  if(v->shape == ARRAY) {
-    int i;
-    Array* arr = AFTER(v);
-    for(i=0;i<arr->size;i++)
-      link(ret,arr->data[i]);
-  }
-  return ret;
-}
-void evaluate(Thunk* t) {
-  Thunk* child = t->ring.cRight->down;
-  force(child);
-  switch(child->pureVal->shape) {
-  case ARRAY: {
-    Array* arr = AFTER(&child->pureVal);
-    Array* newArr = newArray(sizeof(Array) + arr->size*sizeof(arr->data[0]));
-    
-    int i;
-    newArr->size = arr->size;
-    for(i=0;i<arr->size;i++)
-      newArr->data[i] = eval(arr->data[i]);
-    
-    Thunk* ft = newArr->data[0];
-    force(ft);
-    switch(ft->pureVal->shape) {
-    case FUNCTION: {
-      Function* f = AFTER(&ft->pureVal);
-           
-      Thunk* res = (*f)(newArr);
-      force(res);
-      t->pureVal = res->pureVal;
-      res->pureVal = NULL;
-      freeThunk(res);
-      break;
-    }
-    default:
-      t->pureVal = nil();
-      break;
-    }
 
-    freeArray(newArr);
-    break;
-  }
-  default:
-    t->pureVal = child->pureVal;
-    break;
-  }
-}
-Thunk* eval(Thunk* t) {
-  Thunk* ret = newThunk();
-  ret->state = THUNK;
-  ret->initializer = evaluate;
-  link(ret,t);
-  return ret;
+static int parentDepth(Thunk* t) {
+  Link* l;
+  int depth = MAX_DEPTH;
+  FORRING(l,t->ring,p) 
+    if(l->up->depth < depth)
+      depth = l->up->depth;
+  return NEXTDEPTH(depth);
 }
 
-void freeThunk(Thunk* t) {
-  if(parentDepth(t) > t->depth) {
-    /* 
-       If none of our parents lead to the root, then we are the root of a cycle 
-       or have no parents.
-    */
-    Link *child;
-    FORRING(child,t->ring,c) {
-      DETACH(child,p);
-      freeThunk(child->down);
-    }
-    while(t->ring.cRight != &t->ring) {
-      child = t->ring.cRight;
-      t->ring.cRight = child->cRight;
-      poolFreeU(&linkPool,child);
-    }
-    if(t->pureVal != NULL && t->initializer != evaluate) freeValue(t->pureVal);
-    poolFreeU(&thunkPool,t);
-  }
-}
-
-void force(Thunk* t) {
-  switch(t->state) {
-  case PURE:
-    break;
-  case THUNK: {
-    t->state = LOCKED;
-    t->initializer(t);
-    t->state = PURE;
-    break;
-  }
-  case LOCKED:
-    while(1); /* We loop for now when encountering a locked thunk. */
-    break;
-  }
-}
-void invalidate(Thunk* t) {
+static void invalidate(Thunk* t) {
   Link* parent;
   FORRING(parent,t->ring,p) 
     if(parent->up->state == PURE) {
@@ -214,57 +156,55 @@ void invalidate(Thunk* t) {
       invalidate(parent->up);
     }
 }
-int parentDepth(Thunk* t) {
-  Link* l;
-  int depth = MAX_DEPTH;
-  FORRING(l,t->ring,p) 
-    if(l->up->depth < depth)
-      depth = l->up->depth;
-  return depth+1;
-}
 void rebase(Thunk* t,int depth) {
   Link *child;
   t->depth = depth;
   FORRING(child,t->ring,c) 
-    if(child->down->depth > depth+1)
-      rebase(child->down,depth+1);
+    if(child->down->depth > NEXTDEPTH(depth))
+      rebase(child->down,NEXTDEPTH(depth));
 }
-void replace(Thunk* old,Thunk* new) {
-  invalidate(old);
-  
-  Link* parent;
-  Link* next;
-  for(parent = old->ring.pRight; parent != &old->ring;parent = next) {
-    next = parent->pRight;
-    DETACH(parent,p);
-    ATTACH(parent,&new->ring,p);
-    parent->down = new;
+static void debase(Thunk* t,int depth) {
+  if(t->depth == depth) {
+    Link *child;
+    t->depth = parentDepth(t);
+    FORRING(child,t->ring,c) 
+      debase(child->down,NEXTDEPTH(depth));
   }
-
-  rebase(new,parentDepth(new));
-  freeThunk(old);
 }
 
-void showVal(Value* v) {
-  switch(v->shape) {
-  case NUMBER: {
-    int* n = AFTER(v);
-    printf("NUMBER(%d)",*n);
+static void nothing(Thunk* _) { }
+static void mkArray(Thunk* t) {
+  Array* arr = AFTER(t->pureVal);
+  int n=0;
+  Link* child;
+  FORRING(child,t->ring,c)
+    arr->data[n++] = child->down;
+}
+static void evaluate(Thunk* t) {
+  Thunk* child = t->ring.cRight->down;
+  Value* val = force(child);
+  switch(val->shape) {
+  case ARRAY: {
+    Array* arr = AFTER(val);
+    
+    Thunk* ft = arr->data[0];
+    Value* ftVal = force(ft);
+    switch(ftVal->shape) {
+    case FUNCTION: {
+      Function* f = AFTER(ftVal);
+      t->pureVal = (*f)(arr);
+      break;
+    }
+    default:
+      t->pureVal = nil();
+      break;
+    }
     break;
   }
-  case STRING: {
-    String* str = AFTER(v);
-    printf("STRING(%s)",str->data);
+  default:
+    t->pureVal = child->pureVal;
+    t->pureVal->copy = 1;
     break;
-  }
-  case ARRAY:
-    printf("ARRAY");
-    break;
-  case FUNCTION:
-    printf("FUNCTION");
-    break;
-  case NIL:
-    printf("NIL");
   }
 }
 

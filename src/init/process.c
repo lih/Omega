@@ -1,7 +1,7 @@
 #include <core/schedule.h>
 #include <core/universe.h>
 #include <constants.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/vga.h>
 #include <cpu/interrupt.h>

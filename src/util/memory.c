@@ -1,5 +1,5 @@
 #include <constants.h>
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <device/framebuffer.h>
 
 page* page_head;
@@ -84,4 +84,21 @@ void poolFree(Pool* pool,void* block) {
   PoolBlock* newh = block;
   newh->next = pool->head;
   pool->head = newh;
+}
+
+void memcpy(void* dst_,void *src_,int n) {
+  dword *src = src_,*dst = dst_;
+  dword* end = src+(n>>2);
+  
+  while(src != end) {
+    *dst = *src; src++; dst++;
+  }
+  int i;
+  for(i=0;i<(n&3);i++)
+    ((byte*)dst)[i] = ((byte*)src)[i];
+}
+int strlen(char* s) {
+  char* c = s;
+  while(*c != '\0') c++;
+  return c-s;
 }

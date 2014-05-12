@@ -2,9 +2,10 @@
 #include <cpu/descriptors.h>
 #include <cpu/interrupt.h>
 #include <cpu/pervasives.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/vga.h>
+#include <device/keyboard.h>
 
 Selector keyboardGate;
 Semaphore scanSem = 0;
@@ -15,45 +16,55 @@ char currentChar;
 void handleKey(byte);
 extern void handleKeyboard();
 
-extern int running;
-char layout[128] = {
-  0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
-  '9', '0', '-', '=', '\b',	/* Backspace */
-  '\t',			/* Tab */
-  'q', 'w', 'e', 'r',	/* 19 */
-  't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	/* Enter key */
-  0,			/* 29   - Control */
-  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	/* 39 */
-  '\'', '`',   0,		/* Left shift */
-  '\\', 'z', 'x', 'c', 'v', 'b', 'n',			/* 49 */
-  'm', ',', '.', '/',   0,				/* Right shift */
-  '*',
-  0,	/* Alt */
-  ' ',	/* Space bar */
-  0,	/* Caps lock */
-  0,	/* 59 - F1 key ... > */
-  0,   0,   0,   0,   0,   0,   0,   0,
-  0,	/* < ... F10 */
-  0,	/* 69 - Num lock*/
-  0,	/* Scroll Lock */
-  0,	/* Home key */
-  0,	/* Up Arrow */
-  0,	/* Page Up */
-  '-',
-  0,	/* Left Arrow */
-  0,
-  0,	/* Right Arrow */
-  '+',
-  0,	/* 79 - End key*/
-  0,	/* Down Arrow */
-  0,	/* Page Down */
-  0,	/* Insert Key */
-  0,	/* Delete Key */
-  0,   0,   0,
-  0,	/* F11 Key */
-  0,	/* F12 Key */
-  0,	/* All other keys are undefined */
+Layout qwerty = {
+  [SC_1]={'1','!'}, [SC_2]={'2','@'}, [SC_3]={'3','#'}, [SC_4]={'4','$'}, [SC_5]={'5','%'},
+  [SC_6]={'6','^'}, [SC_7]={'7','&'}, [SC_8]={'8','*'}, [SC_9]={'9','('}, [SC_0]={'0',')'},
+
+  [SC_A]={'a','A'},[SC_B]={'b','B'},[SC_C]={'c','C'},[SC_D]={'d','D'},[SC_E]={'e','E'},[SC_F]={'f','F'},
+  [SC_G]={'g','G'},[SC_H]={'h','H'},[SC_I]={'i','I'},[SC_J]={'j','J'},[SC_K]={'k','K'},[SC_L]={'l','L'},
+  [SC_M]={'m','M'},[SC_N]={'n','N'},[SC_O]={'o','O'},[SC_P]={'p','P'},[SC_Q]={'q','Q'},[SC_R]={'r','R'},
+  [SC_S]={'s','S'},[SC_T]={'t','T'},[SC_U]={'u','U'},[SC_V]={'v','V'},[SC_W]={'w','W'},[SC_X]={'x','X'},
+  [SC_Y]={'y','Y'},[SC_Z]={'z','Z'},
+
+  [SC_TAB]={'\t'}, [SC_BACKSPACE]={'\b'},
+
+  [SC_MINUS]={'-','_'}, 
+  [SC_EQUAL]={'=','+'}, 
+  [SC_SEMICOLON]={';',':'},
+  [SC_QUOTE]={'\'','"'},
+  [SC_BACKQUOTE]={'`','~'},
+  [SC_BACKSLASH]={'\\','|'},
+  [SC_COMMA]={',','<'},
+  [SC_DOT]={'.','>'},
+  [SC_SLASH]={'/','?'},
+  [SC_LEFTBRK]={'[','{'}, [SC_RIGHTBRK]={']','}'},
+  [SC_SPACE]={' '}, [SC_ENTER]={'\n'}
 };
+Layout azerty = {
+  [SC_1]={'&','1'}, [SC_2]={0,'2'}, [SC_3]={'"','3'}, [SC_4]={'\'','4'}, [SC_5]={'(','5'},
+  [SC_6]={'-','6'}, [SC_7]={0,'7'}, [SC_8]={'_','8'}, [SC_9]={0,'9'}, [SC_0]={0,'0'},
+
+  [SC_Q]={'a','A'},[SC_B]={'b','B'},[SC_C]={'c','C'},[SC_D]={'d','D'},[SC_E]={'e','E'},[SC_F]={'f','F'},
+  [SC_G]={'g','G'},[SC_H]={'h','H'},[SC_I]={'i','I'},[SC_J]={'j','J'},[SC_K]={'k','K'},[SC_L]={'l','L'},
+  [SC_SEMICOLON]={'m','M'},[SC_N]={'n','N'},[SC_O]={'o','O'},[SC_P]={'p','P'},[SC_A]={'q','Q'},[SC_R]={'r','R'},
+  [SC_S]={'s','S'},[SC_T]={'t','T'},[SC_U]={'u','U'},[SC_V]={'v','V'},[SC_Z]={'w','W'},[SC_X]={'x','X'},
+  [SC_Y]={'y','Y'},[SC_W]={'z','Z'},
+
+
+  [SC_TAB]={'\t'}, [SC_BACKSPACE]={'\b'},
+
+  [SC_MINUS]={')'}, 
+  [SC_EQUAL]={'=','+'}, 
+  [SC_M]={',','?'},
+  [SC_COMMA]={';','.'},
+  [SC_QUOTE]={0,'%'},
+  [SC_BACKSLASH]={'*'},
+  [SC_DOT]={':','/'},
+  [SC_SLASH]={'!'},
+  [SC_LEFTBRK]={'^'}, [SC_RIGHTBRK]={'$'},
+  [SC_SPACE]={' '}, [SC_ENTER]={'\n'}
+};
+Layout *currentLayout = &qwerty;
 
 static void initKeyboard() {
   require(&_universe_);
@@ -79,47 +90,41 @@ void handleKeyboard() {
     releaseSem(&scanSem,0);
     scanSem = 0;
     if(!(scan & 0x80)) {
-      switch(layout[scan]) {
-      case 0:
-	switch(scan) {
-	case 42:			/* Shift */
-	  shift = 1;
-	  break;
-	case 29:			/* Ctrl */
-	  ctrl = 1;
-	  break;
-	case 56: 			/* Alt */
-	  alt = 1;
-	  break;
-	default:
-	  printf("Unassociated scancode %d\n",scan);
-	}
+      switch(scan) {
+      case SC_LSHIFT:			/* Shift */
+	shift = 1;
 	break;
-      
-      case 27: /* ESCAPE */
+      case SC_LCTRL:			/* Ctrl */
+	ctrl = 1;
+	break;
+      case SC_ALT: 			/* Alt */
+	alt = 1;
+	break;
+      case SC_ESCAPE: /* ESCAPE */
 	if(ctrl && alt)
 	  shutdown();
 	break;
-      
-      default: {
-	currentChar = layout[scan] - shift*32;
-	putChar(currentChar);
-	releaseSem(&charSem,0);
-	charSem = 0;
-	break;
-      }
+      default: 
+	if((*currentLayout)[scan][shift] != 0) {
+	  currentChar = (*currentLayout)[scan][shift];
+	  releaseSem(&charSem,0);
+	  charSem = 0;
+	  break;
+	}
+	else
+	  printf("Unassociated scan code %d\n",scan);
       }
 
       setCursor();
     }
-    else switch(scan) {
-      case 170:			/* Unshift */
+    else switch(scan^0x80) {
+      case SC_LSHIFT:			/* Unshift */
 	shift = 0;
 	break;
-      case 157: 			/* Unctrl */
+      case SC_LCTRL: 			/* Unctrl */
 	ctrl = 0;
 	break;
-      case 184:			/* Unalt */
+      case SC_ALT:			/* Unalt */
 	alt = 0;
 	break;
       }
@@ -141,10 +146,19 @@ int readn(int n, char limit, char* buf) {
   int i;
   for(i=0;i<n;i++) {
     buf[i] = readChar();
-    if(buf[i] == '\b')
-      i-=2;
-    if(buf[i] == limit)
-      break;
+    if(buf[i] == '\b') {
+      if(i>=1) {
+	putChar('\b');
+	i-=2;
+      }
+      else i--;
+    }
+    else {
+      putChar(buf[i]);
+      if(buf[i] == limit)
+	break;
+    }
+    setCursor();
   }
   buf[i] = '\0';
   return i;

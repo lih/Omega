@@ -1,15 +1,9 @@
 #ifndef INCLUDED_THUNK
 #define INCLUDED_THUNK
 
-#include <cpu/memory.h>
+#include <util/memory.h>
+#include <init/repl/value.h>
 
-typedef enum {
-  NUMBER, STRING, ARRAY, FUNCTION, NIL
-} Shape;
-typedef struct {
-  Shape shape;
-  byte data[0];
-} Value; 
 typedef struct Link {
   struct Link *pLeft,*pRight;
   struct Link *cLeft,*cRight;
@@ -20,8 +14,8 @@ typedef struct Thunk {
     THUNK, LOCKED, PURE
   } state;
   void (*initializer)(struct Thunk*);
-  int depth;
   Value* pureVal;
+  int depth;
   Link ring;
 } Thunk;
 #define FORRING(i,r,t) for(i=(r).t##Right ; i != &(r);i=i->t##Right )
@@ -36,29 +30,18 @@ typedef struct Thunk {
 	  (a)->t##Left->t##Right = (a);		\
   }
 
-typedef struct {
-  int sz; 
-  char data[0];
-} String;
-typedef struct {
-  int size;
-  Thunk* data[0];
-} Array;
-typedef Thunk* (*Function)(Array* arr);
-
-Value* number(int);
-Value* string(char*);
-Value* array(int n,...);
-Value* func(Function);
-Value* nil();
+extern Thunk rootThunk;
 
 Thunk* pure(Value*);
 Thunk* eval(Thunk*);
-void force(Thunk*);
-void replace(Thunk* old, Thunk* new);
-
 void freeThunk(Thunk*);
 
-void showVal(Value*);
+Value* force(Thunk*);
+void replace(Thunk* old, Thunk* new);
+
+void plant(Thunk* t);
+
+void link(Thunk* father,Thunk* son);
+void rebase(Thunk* t, int n);
 
 #endif

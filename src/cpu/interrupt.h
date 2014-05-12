@@ -1,7 +1,7 @@
 #ifndef INCLUDED_INTERRUPT
 #define INCLUDED_INTERRUPT
 
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <core/schedule.h>
 #include <constants.h>
 

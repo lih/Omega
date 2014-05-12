@@ -1,7 +1,7 @@
 #include <util/pool.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 
-void* curPage = (void*)HEAP_START;
+void* curPage = (void*)(1<<30);
 
 static void* allocPage() {
   void* ret = curPage;

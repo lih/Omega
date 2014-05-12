@@ -2,7 +2,7 @@
 #include <core/feature.h>
 #include <cpu/interrupt.h>
 #include <cpu/pervasives.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <device/acpi.h>
 #include <device/framebuffer.h>
 #include <device/keyboard.h>

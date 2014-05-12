@@ -1,5 +1,5 @@
 #include <init/ping.h>
-#include <cpu/syscall.h>
+#include <core/syscall.h>
 #include <device/framebuffer.h>
 
 Semaphore pingsem = 1, pongsem = 0;

@@ -1,5 +1,7 @@
 #include <init/repl/parser.h>
 #include <util/array.h>
+#include <init/repl/map.h>
+#include <device/framebuffer.h>
 
 #define INRANGE(a,b,x) ((a) <= (x) && (x) <= (b))
 
@@ -16,7 +18,7 @@ Thunk* expr(PState* pstate) {
     Array* arr = AFTER(thunks);
     
     int n = 0;
-    FREE;
+    FORWARD; FREE;
     do {
       arr->data[n] = EXPR; FREE;
       if(arr->data[n] == NULL)
@@ -70,9 +72,10 @@ Thunk* expr(PState* pstate) {
 	FORWARD;
       char old = CUR;
       CUR = '\0';
-      Value* v = string(start);
+      MapNode* n = getNode(&rootNode,start);
       CUR = old;
-      return pure(v);
+      
+      return n->t;
     }
   }
   }

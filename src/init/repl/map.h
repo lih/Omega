@@ -12,9 +12,13 @@ typedef struct MapNode {
 typedef MapNode *Map;
 
 extern MapNode voidNode;
+extern Map rootNode;
+
 #define EMPTY (&voidNode)
 
 MapNode* getNode(Map* rootNode,char* key);
 void showMap(Map map);
+
+void define(char* key,Thunk* val);
 
 #endif

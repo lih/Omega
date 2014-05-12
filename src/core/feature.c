@@ -1,4 +1,4 @@
-#include <cpu/memory.h>
+#include <util/memory.h>
 #include <core/feature.h>
 #include <device/framebuffer.h>
 

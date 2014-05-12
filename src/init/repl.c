@@ -46,6 +46,10 @@ char* ident(PState* pstate) {
   }
 }
 
+Value* disowned(Value* v) {
+  v->owned = 0;
+  return v;
+}
 
 Value* array_at(Array* arr) {
   if(arr->size == 3) {
@@ -76,12 +80,35 @@ Value* builtin_if(Array* args) {
     printf("Wrong number of arguments to 'if' function\n");
   return nil();
 }
+Value* builtin_plus(Array* args) {
+  int ret = 0;
+  int i;
+  for(i=1;i<args->size;i++) {
+    Value* v = args->data[i]->down->pureVal;
+    if(v->shape == NUMBER)
+      ret += *(int*)AFTER(v);
+  }
+  return disowned(number(ret));
+}
+#define VALUE_AT(a,i) force((a)->data[i]->down)
+Value* builtin_eq(Array* args) {
+  if(args->size == 3) {
+    Value *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
+    if(a->shape == NUMBER && b->shape == NUMBER) {
+      int xa = *(int*)AFTER(a), xb = *(int*)AFTER(b);
+      return (xa==xb ? number(0) : nil());
+    } 
+  }
+  return nil();
+}
 
 void repl() {
   char buf[80];
 
   define("@",pure(func(array_at)));
   define("if",pure(func(builtin_if)));
+  define("+",pure(func(builtin_plus)));
+  define("=",pure(func(builtin_eq)));
 
   while(1) {
     printf("> ");
@@ -111,3 +138,4 @@ void repl() {
     runCmd(buf);
   }
 }
+

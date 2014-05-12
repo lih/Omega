@@ -20,9 +20,9 @@ permissions, and no devices are handled beyond the absolute necessary.
 But what about the security, I hear you cry ? What about
 encapsulation, and protection, and quotas and limits ? What about
 graphics and networking and sound ? These can all be implemented as
-privileged user-space processes without interfering with kernel
-code, enabling greater flexibility and simplicity than monolithic
-kernels.
+privileged user-space processes without interfering with kernel code,
+enabling greater flexibility and simplicity than monolithic kernels
+who need to carry all that extra complexity.
 
 The system primitives defined in Omega allow a parent program to
 intercept system calls from its children and handle them instead of
@@ -39,7 +39,7 @@ Simply efficient
 ----------------
 
 Since its purpose is so focused, the Omega kernel itself can afford to
-be quite small (less than 20k at the time of writing this), and
+be quite small (less than 30k at the time of writing this), and
 extremely efficient since there are no complex data structures to
 initialize and maintain or devices to wait upon. It can boot instantly
 on almost any (compatible, x86) computer and be up and running in less

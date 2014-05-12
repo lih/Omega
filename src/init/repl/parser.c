@@ -16,19 +16,21 @@ Thunk* expr(PState* pstate) {
     Value* thunks = newArray(sizeof(Value) + sizeof(Array) + 16*sizeof(Thunk*));
     thunks->shape = ARRAY;
     Array* arr = AFTER(thunks);
+    arr->size = 0;
+    Thunk* ret = pure(thunks);
     
     int n = 0;
     FORWARD; FREE;
     do {
-      arr->data[n] = EXPR; FREE;
-      if(arr->data[n] == NULL)
+      Thunk* sub = EXPR; FREE;
+      if(sub == NULL)
 	break;
+      arr->data[n] = link(ret,sub);
       n++;
     } while(CUR != ']');
     arr->size = n;
     FORWARD;
     
-    Thunk* ret = pure(thunks);
     return (start=='[' ? ret : eval(ret));
   }
   case ']':
@@ -72,10 +74,10 @@ Thunk* expr(PState* pstate) {
 	FORWARD;
       char old = CUR;
       CUR = '\0';
-      MapNode* n = getNode(&rootNode,start);
+      Thunk* n = lookup(&rootThunk,start);
       CUR = old;
       
-      return n->t;
+      return n;
     }
   }
   }

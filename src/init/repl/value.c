@@ -25,7 +25,7 @@ void freeValue(Value* v) {
 Value* number(int n) {
   Value* ret = poolAllocU(&numPool);
   ret->shape = NUMBER;
-  ret->copy = 0;
+  ret->owned = 1;
 
   int* v = (int*)&ret->data;
   *v = n;
@@ -35,7 +35,7 @@ Value* string(char* s) {
   int l = strlen(s);
   Value* ret = newArray(sizeof(Value) + sizeof(String) + l + 1);
   ret->shape = STRING;
-  ret->copy = 0;
+  ret->owned = 1;
 
   String* str = AFTER(ret);
   str->sz = l;
@@ -44,10 +44,10 @@ Value* string(char* s) {
   return ret;
 }
 Value* array(int n,...) {
-  Thunk** args = AFTER(&n);
+  Link** args = AFTER(&n);
   Value* ret = newArray(sizeof(Value) + sizeof(Array) + n*sizeof(Thunk*));
   ret->shape = ARRAY;
-  ret->copy = 0;
+  ret->owned = 1;
 
   Array* arr = AFTER(ret);
   int i;
@@ -60,7 +60,7 @@ Value* array(int n,...) {
 Value* func(Function f) {
   Value* ret = poolAllocU(&numPool);
   ret->shape = FUNCTION;
-  ret->copy = 0;
+  ret->owned = 1;
   Function* f2 = AFTER(ret);
   *f2 = f;
   return ret;
@@ -71,7 +71,7 @@ Value* nil() {
 Value* dictionary() {
   Value* ret = poolAllocU(&numPool);
   ret->shape = DICTIONARY;
-  ret->copy = 0;
+  ret->owned = 1;
   Map* m = AFTER(ret);
   *m = EMPTY;
   return ret;
@@ -81,12 +81,12 @@ void showVal(Value* v) {
   switch(v->shape) {
   case NUMBER: {
     int* n = AFTER(v);
-    printf("NUMBER(%d)",*n);
+    printf("%d",*n);
     break;
   }
   case STRING: {
     String* str = AFTER(v);
-    printf("STRING(%s)",str->data);
+    printf("\"%s\"",str->data);
     break;
   }
   case ARRAY: {
@@ -95,7 +95,7 @@ void showVal(Value* v) {
     Array* arr = AFTER(v);
     for(i=0;i<arr->size;i++) {
       if(i!=0) putChar(' ');
-      showVal(force(arr->data[i]));
+      showVal(force(arr->data[i]->down));
     }
     putChar(']');
     break;

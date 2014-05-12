@@ -7,14 +7,35 @@
 MapNode voidNode = {
   .left = EMPTY, .right = EMPTY, .height = 0
 };
-Map rootNode = EMPTY;
-Pool nodePool = { 0, sizeof(MapNode) };
+static Pool nodePool = { 0, sizeof(MapNode) };
+
+static MapNode* getNode(Map* m,char* key);
 
 int strcmp(char* s1,char* s2) {
   while(*s1 == *s2 && *s1 != '\0')
     { s1++; s2++; }
   
   return *s2-*s1;
+}
+
+void define(char* key,Thunk* new) {
+  Thunk* old = lookup(&rootThunk,key);
+  replace(old,new);
+}
+
+Thunk* lookup(Thunk* map,char* key) {
+  Value* v = force(map);
+  if(v->shape == DICTIONARY) {
+    Map* root = AFTER(v);
+    MapNode* n = getNode(root,key);
+    if(n->link == NULL) 
+      n->link = link(map,pure(nil()));
+    return n->link->down;
+  }
+  else {
+    printf("Thunk is not a dictionary.\n");
+    return pure(nil());
+  }
 }
 
 #define map (*_map)
@@ -31,21 +52,13 @@ void rotl(Map* _map) {
   map->left->right = mid;
 }
 #undef map
-
 void setHeight(Map n) {
   if(n->left->height > n->right->height)
     n->height = n->left->height+1;
   else 
     n->height = n->right->height+1;
 }
-
-void define(char* key,Thunk* t) {
-  MapNode* n = getNode(&rootNode,key);
-  replace(n->t,t);
-  n->t = t;
-}
-
-MapNode* getNode(MapNode** root,char* key) {
+MapNode* getNode(Map* root,char* key) {
 #define rootp (*root)
   if(rootp == EMPTY) {
     rootp = poolAllocU(&nodePool);
@@ -53,10 +66,10 @@ MapNode* getNode(MapNode** root,char* key) {
     char* newKey = newArray(l+1);
     memcpy(newKey,key,l+1);
     SET_STRUCT(MapNode,*rootp,{ 
-	.key = newKey, .left = &voidNode, .right = &voidNode, .height = 1, .t = pure(nil())
+	.key = newKey, .left = &voidNode, .right = &voidNode, .height = 1,
+	  .link = NULL
 	  });
-
-    plant(rootp->t);
+        
     return rootp;
   }
 
@@ -94,7 +107,7 @@ void showMap(MapNode* root) {
   if(root != &voidNode) {
     putChar('/');
     showMap(root->left);
-    printf("%s:%d:",root->key,root->height); showVal(root->t->pureVal);
+    printf("%s:%d:",root->key,root->height); showVal(root->link->down->pureVal);
     showMap(root->right);
     putChar('\\');
   }

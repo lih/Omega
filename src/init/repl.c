@@ -46,14 +46,15 @@ char* ident(PState* pstate) {
   }
 }
 
+
 Value* array_at(Array* arr) {
   if(arr->size == 3) {
-    Value* varr = force(arr->data[1]);
-    Value* vn = force(arr->data[2]);
+    Value* varr = force(arr->data[1]->down);
+    Value* vn = force(arr->data[2]->down);
     if(varr->shape == ARRAY && vn->shape == NUMBER) {
       int* n = AFTER(vn);
       Array* arr = AFTER(varr);
-      return force(arr->data[*n]);
+      return force(arr->data[*n]->down);
     }
     else
       printf("Wrong argument types for array_at\n");
@@ -63,11 +64,24 @@ Value* array_at(Array* arr) {
   
   return nil();
 }
+Value* builtin_if(Array* args) {
+  if(args->size == 4) {
+    Value* cond = force(args->data[1]->down);
+    if(cond->shape == NIL)
+      return force(args->data[3]->down);
+    else
+      return force(args->data[2]->down);
+  }
+  else
+    printf("Wrong number of arguments to 'if' function\n");
+  return nil();
+}
 
 void repl() {
   char buf[80];
 
   define("@",pure(func(array_at)));
+  define("if",pure(func(builtin_if)));
 
   while(1) {
     printf("> ");
@@ -82,11 +96,14 @@ void repl() {
     FREE;
     Thunk* t = EXPR;
 #undef pstate
-    if(var==NULL) var = "it";
     if(t != NULL) {
       showVal(force(t)); putChar('\n');
-      printf("%s: %x\n",var,t);
-      define(var,t);
+      if(var != NULL) {
+	define(var,t);
+	/* printf("Defined '%s' at %x\n",var,t); */
+      }
+      else 
+	freeThunk(t);
     }
     else 
       printf("Couldn't understand the expression '%s'\n",buf);

@@ -5,18 +5,17 @@
 
 typedef struct MapNode {
   char* key;
-  Thunk* t;
+  Link* link;
   int height;
   struct MapNode *left,*right;
 } MapNode;
 typedef MapNode *Map;
 
 extern MapNode voidNode;
-extern Map rootNode;
-
 #define EMPTY (&voidNode)
 
-MapNode* getNode(Map* rootNode,char* key);
+Thunk* lookup(Thunk* map,char* key);
+
 void showMap(Map map);
 
 void define(char* key,Thunk* val);

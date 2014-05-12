@@ -7,7 +7,7 @@ typedef enum {
   NIL, NUMBER, STRING, ARRAY, DICTIONARY, FUNCTION
 } Shape;
 typedef struct {
-  Shape shape:24; byte copy;
+  Shape shape:24; byte owned;
   byte data[0];
 } PACKED Value; 
 
@@ -17,7 +17,7 @@ typedef struct {
 } String;
 typedef struct {
   int size;
-  struct Thunk* data[0];
+  struct Link* data[0];
 } Array;
 typedef Value* (*Function)(Array* arr);
 

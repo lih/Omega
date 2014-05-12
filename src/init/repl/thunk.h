@@ -39,9 +39,7 @@ void freeThunk(Thunk*);
 Value* force(Thunk*);
 void replace(Thunk* old, Thunk* new);
 
-void plant(Thunk* t);
-
-void link(Thunk* father,Thunk* son);
+Link* link(Thunk* father,Thunk* son);
 void rebase(Thunk* t, int n);
 
 #endif

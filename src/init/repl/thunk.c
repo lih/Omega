@@ -9,6 +9,7 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
 #define NEXTDEPTH(n) min(MAX_DEPTH,(n)+1)
+#define DEEPER(a,b) ((a) > (b) || (a) == MAX_DEPTH)
 
 static void nothing(Thunk*);
 static void evaluate(Thunk*);
@@ -52,7 +53,7 @@ Thunk* newThunk() {
   return ret;
 }
 void freeThunk(Thunk* t) {
-  if(parentDepth(t) > t->depth || t->depth >= MAX_DEPTH) {
+  if(DEEPER(t->depth,parentDepth(t))) {
     /* 
        If none of our parents lead to the root, then we are the root of a cycle 
        or have no parents.
@@ -155,9 +156,11 @@ static void invalidate(Thunk* t) {
 void rebase(Thunk* t,int depth) {
   Link *child;
   t->depth = depth;
-  FORRING(child,t->ring,c) 
-    if(child->down->depth > NEXTDEPTH(depth))
-      rebase(child->down,NEXTDEPTH(depth));
+  FORRING(child,t->ring,c) {
+    int next = NEXTDEPTH(depth);
+    if(DEEPER(child->down->depth,next))
+      rebase(child->down,next);
+  }
 }
 static void debase(Thunk* t,int depth) {
   if(t->depth == depth) {
@@ -175,12 +178,14 @@ static void evaluate(Thunk* t) {
   switch(val->shape) {
   case ARRAY: {
     Array* arr = AFTER(val);
-    
+
     Thunk* ft = arr->data[0]->down;
     Value* ftVal = force(ft);
+    
     switch(ftVal->shape) {
     case FUNCTION: {
       Function* f = AFTER(ftVal);
+
       t->pureVal = (*f)(arr);
       break;
     }

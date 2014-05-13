@@ -101,7 +101,6 @@ Thunk* expr(PState* pstate) {
   
   while(1) {
     FREE;
-    printf("Reading '%c'\n",CUR);
     switch(CUR) {
     case ':': {
       FORWARD;

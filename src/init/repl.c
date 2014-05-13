@@ -90,7 +90,7 @@ Value* builtin_plus(Array* args) {
   int ret = 0;
   int i;
   for(i=1;i<args->size;i++) {
-    Value* v = args->data[i]->down->pureVal;
+    Value* v = force(args->data[i]->down);
     if(v->shape == NUMBER)
       ret += *(int*)AFTER(v);
   }
@@ -102,7 +102,7 @@ Value* builtin_eq(Array* args) {
     Value *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
     if(a->shape == NUMBER && b->shape == NUMBER) {
       int xa = *(int*)AFTER(a), xb = *(int*)AFTER(b);
-      return (xa==xb ? number(0) : nil());
+      return (xa==xb ? disowned(number(0)) : nil());
     } 
   }
   return nil();
@@ -130,7 +130,8 @@ void repl() {
     FREE;
     Thunk* t = EXPR;
     if(t != NULL) {
-      showVal(force(t)); putChar('\n');
+      Value* v = force(t);
+      showVal(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];
 	vstart[vsize] = '\0';

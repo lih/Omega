@@ -30,6 +30,7 @@ Thunk* lookup(Thunk* map,char* key) {
     MapNode* n = getNode(root,key);
     if(n->link == NULL) 
       n->link = link(map,pure(nil()));
+    rebase(n->link->down,1);
     return n->link->down;
   }
   else {

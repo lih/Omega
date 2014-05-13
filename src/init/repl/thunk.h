@@ -34,6 +34,7 @@ extern Thunk rootThunk;
 
 Thunk* pure(Value*);
 Thunk* eval(Thunk*);
+Thunk* newThunk();
 void freeThunk(Thunk*);
 
 Value* force(Thunk*);

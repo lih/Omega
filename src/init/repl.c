@@ -63,8 +63,11 @@ Value* array_at(Array* arr) {
       Array* arr = AFTER(varr);
       return force(arr->data[*n]->down);
     }
-    else
-      printf("Wrong argument types for array_at\n");
+    else if(varr->shape == DICTIONARY && vn->shape == STRING) {
+      String* s = AFTER(vn);
+      return force(lookup(arr->data[1]->down,s->data));      
+    }
+    else printf("Wrong argument types for array_at\n");
   }
   else
     printf("Wrong number of arguments for function array_at\n");

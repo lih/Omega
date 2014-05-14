@@ -1,7 +1,7 @@
 #ifndef INCLUDED_PARSER
 #define INCLUDED_PARSER
 
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 
 typedef struct {
   char* str;
@@ -21,8 +21,8 @@ typedef enum {
 extern CharClass classes[128];
 
 void spaces(PState* pstate);
-Thunk* expr(PState* pstate);
-Thunk* atom(PState* pstate);
-Thunk* ident(PState* pstate);
+Gear* expr(PState* pstate);
+Gear* atom(PState* pstate);
+Gear* ident(PState* pstate);
 
 #endif

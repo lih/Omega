@@ -10,10 +10,10 @@ provide a few pointers to help you get acquainted with the system.
   * [Multitasking] problems and solutions encountered during implementation
   * the [Omega Syscall Reference], for writing client programs
   * A small [VGA tutorial] explaining how to setup a simple VGA driver
-  * The [Omega Shell] languge specification and tutorial
+  * The [MeXa] (scripting language of Omega) specification and tutorial
 
 [README]: <README.html>
 [Multitasking]: <multitasking.html>
 [Omega Syscall Reference]: <syscalls.html>
 [VGA tutorial]: <VGA.html>
-[Omega Shell]: <shell.html>
+[MeXa]: <meXa.html>

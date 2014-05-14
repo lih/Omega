@@ -1,7 +1,7 @@
 #ifndef INCLUDE_REPL
 #define INCLUDE_REPL
 
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 
 void repl();
 

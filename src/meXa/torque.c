@@ -1,15 +1,15 @@
-#include <init/repl/value.h>
+#include <meXa/torque.h>
 #include <util/array.h>
 #include <util/pool.h>
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 #include <device/framebuffer.h>
-#include <init/repl/map.h>
+#include <meXa/dictionary.h>
 
-Pool numPool = { 0, sizeof(Value) + sizeof(int) };
-Value nilVal = { .shape = NIL };
+Pool numPool = { 0, sizeof(Torque) + sizeof(int) };
+Torque nilVal = { .unit = NIL };
 
-void freeValue(Value* v) {
-  switch(v->shape) {
+void freeTorque(Torque* v) {
+  switch(v->unit) {
   case NUMBER:
   case FUNCTION:
   case DICTIONARY:
@@ -22,19 +22,19 @@ void freeValue(Value* v) {
   }
 }
 
-Value* number(int n) {
-  Value* ret = poolAllocU(&numPool);
-  ret->shape = NUMBER;
+Torque* number(int n) {
+  Torque* ret = poolAllocU(&numPool);
+  ret->unit = NUMBER;
   ret->owned = 1;
 
   int* v = (int*)&ret->data;
   *v = n;
   return ret;
 }
-Value* string(char* s) {
+Torque* string(char* s) {
   int l = strlen(s);
-  Value* ret = newArray(sizeof(Value) + sizeof(String) + l + 1);
-  ret->shape = STRING;
+  Torque* ret = newArray(sizeof(Torque) + sizeof(String) + l + 1);
+  ret->unit = STRING;
   ret->owned = 1;
 
   String* str = AFTER(ret);
@@ -43,10 +43,10 @@ Value* string(char* s) {
    
   return ret;
 }
-Value* array(int n,...) {
-  Link** args = AFTER(&n);
-  Value* ret = newArray(sizeof(Value) + sizeof(Array) + n*sizeof(Thunk*));
-  ret->shape = ARRAY;
+Torque* array(int n,...) {
+  Cog** args = AFTER(&n);
+  Torque* ret = newArray(sizeof(Torque) + sizeof(Array) + n*sizeof(Gear*));
+  ret->unit = ARRAY;
   ret->owned = 1;
 
   Array* arr = AFTER(ret);
@@ -57,28 +57,28 @@ Value* array(int n,...) {
 
   return ret;
 }
-Value* func(Function f) {
-  Value* ret = poolAllocU(&numPool);
-  ret->shape = FUNCTION;
+Torque* func(Function f) {
+  Torque* ret = poolAllocU(&numPool);
+  ret->unit = FUNCTION;
   ret->owned = 1;
   Function* f2 = AFTER(ret);
   *f2 = f;
   return ret;
 }
-Value* nil() {
+Torque* nil() {
   return &nilVal;
 }
-Value* dictionary() {
-  Value* ret = poolAllocU(&numPool);
-  ret->shape = DICTIONARY;
+Torque* dictionary() {
+  Torque* ret = poolAllocU(&numPool);
+  ret->unit = DICTIONARY;
   ret->owned = 1;
   Map* m = AFTER(ret);
   *m = EMPTY;
   return ret;
 }
 
-void showVal(Value* v) {
-  switch(v->shape) {
+void showTorque(Torque* v) {
+  switch(v->unit) {
   case NUMBER: {
     int* n = AFTER(v);
     printf("%d",*n);
@@ -95,7 +95,7 @@ void showVal(Value* v) {
     Array* arr = AFTER(v);
     for(i=0;i<arr->size;i++) {
       if(i!=0) putChar(' ');
-      showVal(force(arr->data[i]->down));
+      showTorque(torque(arr->data[i]->down));
     }
     putChar(']');
     break;

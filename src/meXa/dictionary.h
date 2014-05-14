@@ -1,11 +1,11 @@
 #ifndef INCLUDED_MAP
 #define INCLUDED_MAP
 
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 
 typedef struct MapNode {
   char* key;
-  Link* link;
+  Cog* cog;
   int height;
   struct MapNode *left,*right;
 } MapNode;
@@ -14,10 +14,10 @@ typedef MapNode *Map;
 extern MapNode voidNode;
 #define EMPTY (&voidNode)
 
-Thunk* lookup(Thunk* map,char* key);
+Gear* lookup(Gear* map,char* key);
 
 void showMap(Map map);
 
-void define(char* key,Thunk* val);
+void define(char* key,Gear* val);
 
 #endif

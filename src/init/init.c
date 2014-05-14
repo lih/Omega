@@ -4,7 +4,7 @@
 #include <device/keyboard.h>
 #include <device/vga.h>
 #include <init/ping.h>
-#include <init/repl.h>
+#include <meXa.h>
 #include <cpu/pervasives.h>
 
 #define TRI(x) (x + (x<<2) + (x<<4))

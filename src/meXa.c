@@ -2,9 +2,9 @@
 #include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/keyboard.h>
-#include <init/repl.h>
-#include <init/repl/map.h>
-#include <init/repl/parser.h>
+#include <meXa.h>
+#include <meXa/dictionary.h>
+#include <meXa/parser.h>
 #include <util/array.h>
 
 int  strcmp(char*,char*);
@@ -49,23 +49,23 @@ int identEq(PState* pstate) {
 #undef IDENT
 #define IDENT identEq(pstate)
 
-Value* disowned(Value* v) {
+Torque* disowned(Torque* v) {
   v->owned = 0;
   return v;
 }
 
-Value* array_at(Array* arr) {
+Torque* array_at(Array* arr) {
   if(arr->size == 3) {
-    Value* varr = force(arr->data[1]->down);
-    Value* vn = force(arr->data[2]->down);
-    if(varr->shape == ARRAY && vn->shape == NUMBER) {
+    Torque* varr = torque(arr->data[1]->down);
+    Torque* vn = torque(arr->data[2]->down);
+    if(varr->unit == ARRAY && vn->unit == NUMBER) {
       int* n = AFTER(vn);
       Array* arr = AFTER(varr);
-      return force(arr->data[*n]->down);
+      return torque(arr->data[*n]->down);
     }
-    else if(varr->shape == DICTIONARY && vn->shape == STRING) {
+    else if(varr->unit == DICTIONARY && vn->unit == STRING) {
       String* s = AFTER(vn);
-      return force(lookup(arr->data[1]->down,s->data));      
+      return torque(lookup(arr->data[1]->down,s->data));      
     }
     else printf("Wrong argument types for array_at\n");
   }
@@ -74,33 +74,33 @@ Value* array_at(Array* arr) {
   
   return nil();
 }
-Value* builtin_if(Array* args) {
+Torque* builtin_if(Array* args) {
   if(args->size == 4) {
-    Value* cond = force(args->data[1]->down);
-    if(cond->shape == NIL)
-      return force(args->data[3]->down);
+    Torque* cond = torque(args->data[1]->down);
+    if(cond->unit == NIL)
+      return torque(args->data[3]->down);
     else
-      return force(args->data[2]->down);
+      return torque(args->data[2]->down);
   }
   else
     printf("Wrong number of arguments to 'if' function\n");
   return nil();
 }
-Value* builtin_plus(Array* args) {
+Torque* builtin_plus(Array* args) {
   int ret = 0;
   int i;
   for(i=1;i<args->size;i++) {
-    Value* v = force(args->data[i]->down);
-    if(v->shape == NUMBER)
+    Torque* v = torque(args->data[i]->down);
+    if(v->unit == NUMBER)
       ret += *(int*)AFTER(v);
   }
   return disowned(number(ret));
 }
-#define VALUE_AT(a,i) force((a)->data[i]->down)
-Value* builtin_eq(Array* args) {
+#define VALUE_AT(a,i) torque((a)->data[i]->down)
+Torque* builtin_eq(Array* args) {
   if(args->size == 3) {
-    Value *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
-    if(a->shape == NUMBER && b->shape == NUMBER) {
+    Torque *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
+    if(a->unit == NUMBER && b->unit == NUMBER) {
       int xa = *(int*)AFTER(a), xb = *(int*)AFTER(b);
       return (xa==xb ? disowned(number(0)) : nil());
     } 
@@ -117,7 +117,7 @@ void repl() {
   define("=",pure(func(builtin_eq)));
 
   while(1) {
-    printf("> ");
+    printf("| ");
     int n = readn(79,'\n',buf);
     (void)n;
     PState st = {
@@ -128,10 +128,10 @@ void repl() {
     char* vstart = &CUR;
     int vsize = IDENT;
     FREE;
-    Thunk* t = EXPR;
+    Gear* t = EXPR;
     if(t != NULL) {
-      Value* v = force(t);
-      showVal(v); putChar('\n');
+      Torque* v = torque(t);
+      printStr("= "); showTorque(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];
 	vstart[vsize] = '\0';
@@ -139,7 +139,7 @@ void repl() {
 	vstart[vsize] = old;
       }
       else
-	freeThunk(t);
+	freeGear(t);
       
       /* printf("Defined '%s' at %x\n",var,t); */
     }

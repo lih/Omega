@@ -1,4 +1,4 @@
-#include <init/repl/map.h>
+#include <meXa/dictionary.h>
 #include <util/pool.h>
 #include <device/framebuffer.h>
 #include <util/memory.h>
@@ -18,23 +18,23 @@ int strcmp(char* s1,char* s2) {
   return *s2-*s1;
 }
 
-void define(char* key,Thunk* new) {
-  Thunk* old = lookup(&rootThunk,key);
+void define(char* key,Gear* new) {
+  Gear* old = lookup(&rootGear,key);
   replace(old,new);
 }
 
-Thunk* lookup(Thunk* map,char* key) {
-  Value* v = force(map);
-  if(v->shape == DICTIONARY) {
+Gear* lookup(Gear* map,char* key) {
+  Torque* v = torque(map);
+  if(v->unit == DICTIONARY) {
     Map* root = AFTER(v);
     MapNode* n = getNode(root,key);
-    if(n->link == NULL) 
-      n->link = link(map,pure(nil()));
-    rebase(n->link->down,1);
-    return n->link->down;
+    if(n->cog == NULL) 
+      n->cog = cog(map,pure(nil()));
+    rebase(n->cog->down,1);
+    return n->cog->down;
   }
   else {
-    printf("Thunk is not a dictionary.\n");
+    printf("Gear is not a dictionary.\n");
     return pure(nil());
   }
 }
@@ -68,7 +68,7 @@ MapNode* getNode(Map* root,char* key) {
     memcpy(newKey,key,l+1);
     SET_STRUCT(MapNode,*rootp,{ 
 	.key = newKey, .left = &voidNode, .right = &voidNode, .height = 1,
-	  .link = NULL
+	  .cog = NULL
 	  });
         
     return rootp;
@@ -108,7 +108,7 @@ void showMap(MapNode* root) {
   if(root != &voidNode) {
     putChar('/');
     showMap(root->left);
-    printf("%s:%d:",root->key,root->height); showVal(root->link->down->pureVal);
+    printf("%s:%d:",root->key,root->height); showTorque(root->cog->down->torque);
     showMap(root->right);
     putChar('\\');
   }

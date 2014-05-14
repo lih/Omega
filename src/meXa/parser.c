@@ -1,8 +1,8 @@
-#include <init/repl/parser.h>
+#include <meXa/parser.h>
 #include <util/array.h>
-#include <init/repl/map.h>
+#include <meXa/dictionary.h>
 #include <device/framebuffer.h>
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 
 #define INRANGE(a,b,x) ((a) <= (x) && (x) <= (b))
 
@@ -19,7 +19,7 @@ CharClass classes[128] = {
 void spaces(PState* pstate) {
   while(classes[CUR] == SPACE) FORWARD;
 }
-Thunk* ident(PState* pstate) {
+Gear* ident(PState* pstate) {
   char* start = &CUR;
   while(classes[CUR] == REGULAR || classes[CUR] == DIGIT)
     FORWARD;
@@ -27,38 +27,38 @@ Thunk* ident(PState* pstate) {
   if(&CUR > start) {
     char old = CUR;
     CUR = '\0';
-    Thunk* n = lookup(&rootThunk,start);
+    Gear* n = lookup(&rootGear,start);
     CUR = old;
     return n;
   }
   else
     return NULL;
 }
-Thunk* atom(PState* pstate) {
+Gear* atom(PState* pstate) {
   switch(classes[CUR]) {
   case OPAREN: { 
     char start = CUR;
-    Value* thunks = newArray(sizeof(Value) + sizeof(Array) + 16*sizeof(Thunk*));
-    thunks->shape = ARRAY;
-    Array* arr = AFTER(thunks);
+    Torque* gears = newArray(sizeof(Torque) + sizeof(Array) + 16*sizeof(Gear*));
+    gears->unit = ARRAY;
+    Array* arr = AFTER(gears);
     arr->size = 0;
-    Thunk* ret = pure(thunks);
+    Gear* ret = pure(gears);
     
     int n = 0;
     FORWARD; FREE;
     pstate->depth++;
     do {
-      Thunk* sub = EXPR; FREE;
+      Gear* sub = EXPR; FREE;
       if(sub == NULL)
 	break;
-      arr->data[n] = link(ret,sub);
+      arr->data[n] = cog(ret,sub);
       n++;
     } while(CUR != ']');
     arr->size = n;
     FORWARD;
     pstate->depth--;
         
-    return (start=='[' ? ret : eval(ret));
+    return (start=='[' ? ret : transmit(ret));
   }
   case CPAREN: {
     if(pstate->depth == 0) {
@@ -86,7 +86,7 @@ Thunk* atom(PState* pstate) {
     }
     char old = CUR;
     CUR = '\0';
-    Thunk* ret = pure(string(start));
+    Gear* ret = pure(string(start));
     CUR = old;
     if(old != '\0') FORWARD;
     return ret;
@@ -95,8 +95,8 @@ Thunk* atom(PState* pstate) {
   default: return NULL;
   }
 }
-Thunk* expr(PState* pstate) {
-  Thunk* a = ATOM;
+Gear* expr(PState* pstate) {
+  Gear* a = ATOM;
   if(a == NULL) return NULL;
   
   while(1) {
@@ -105,32 +105,32 @@ Thunk* expr(PState* pstate) {
     case ':': {
       FORWARD;
       FREE;
-      Thunk* o = ATOM;
+      Gear* o = ATOM;
       FREE;
-      Thunk* b = ATOM;
+      Gear* b = ATOM;
       if(o == NULL || b == NULL) return NULL;
-      Thunk* ret = newThunk();
-      Link* la = link(ret,a), *lb = link(ret,b), *lo = link(ret,o);
+      Gear* ret = newGear();
+      Cog* la = cog(ret,a), *lb = cog(ret,b), *lo = cog(ret,o);
     
-      ret->state = PURE;
-      ret->pureVal = array(3,lo,la,lb);
+      ret->state = TORQUE;
+      ret->torque = array(3,lo,la,lb);
 
-      a = eval(ret);
+      a = transmit(ret);
       break;
     }    
     case '.': {
       FORWARD;
       FREE;
-      Thunk* f = ATOM;
+      Gear* f = ATOM;
       if(f == NULL) return NULL;
     
-      Thunk* ret = newThunk();
-      Link* la = link(ret,a), *lf = link(ret,f);
+      Gear* ret = newGear();
+      Cog* la = cog(ret,a), *lf = cog(ret,f);
     
-      ret->state = PURE;
-      ret->pureVal = array(2,lf,la);
+      ret->state = TORQUE;
+      ret->torque = array(2,lf,la);
     
-      a = eval(ret);
+      a = transmit(ret);
       break;
     }
     default:  return a;

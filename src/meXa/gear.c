@@ -1,9 +1,9 @@
-#include <init/repl/thunk.h>
+#include <meXa/gear.h>
 #include <device/framebuffer.h>
 #include <util/array.h>
 #include <util/pool.h>
 #include <util/memory.h>
-#include <init/repl/map.h>
+#include <meXa/dictionary.h>
 
 #define MAX_DEPTH 10000000
 #define max(a,b) ((a)>(b)?(a):(b))
@@ -11,108 +11,108 @@
 #define NEXTDEPTH(n) min(MAX_DEPTH,(n)+1)
 #define DEEPER(a,b) ((a) > (b) || (a) == MAX_DEPTH)
 
-static void nothing(Thunk*);
-static void evaluate(Thunk*);
+static void nothing(Gear*);
+static void evaluate(Gear*);
 
-Pool linkPool = { 0, sizeof(Link) };
-Pool thunkPool = { 0, sizeof(Thunk) };
+Pool cogPool = { 0, sizeof(Cog) };
+Pool gearPool = { 0, sizeof(Gear) };
 struct {
-  Value v;
+  Torque v;
   Map m;
 } rootMap = {
-  { .shape = DICTIONARY },
+  { .unit = DICTIONARY },
   EMPTY
 };
-Thunk rootThunk = {
-  .state = PURE,
+Gear rootGear = {
+  .state = TORQUE,
   .depth = 0,
-  .pureVal = &rootMap.v,
+  .torque = &rootMap.v,
   .initializer = nothing,
   .ring = {
-    .cRight = &rootThunk.ring,
-    .pRight = &rootThunk.ring,
-    .cLeft = &rootThunk.ring,
-    .pLeft = &rootThunk.ring,
+    .cRight = &rootGear.ring,
+    .pRight = &rootGear.ring,
+    .cLeft = &rootGear.ring,
+    .pLeft = &rootGear.ring,
   }
 };
 
-static void debase(Thunk* t,int depth);
-static int parentDepth(Thunk* t);
-static void invalidate(Thunk* t);
+static void debase(Gear* t,int depth);
+static int parentDepth(Gear* t);
+static void invalidate(Gear* t);
 
-Thunk* newThunk() {
-  Thunk* ret = poolAllocU(&thunkPool);
-  Link* ring = &ret->ring;
+Gear* newGear() {
+  Gear* ret = poolAllocU(&gearPool);
+  Cog* ring = &ret->ring;
   ring->cRight = ring; 
   ring->pRight = ring; 
   ring->cLeft = ring;
   ring->pLeft = ring; 
   ret->depth = MAX_DEPTH;
-  ret->pureVal = NULL;
+  ret->torque = NULL;
   ret->initializer = nothing;
   return ret;
 }
-void freeThunk(Thunk* t) {
+void freeGear(Gear* t) {
   if(DEEPER(t->depth,parentDepth(t))) {
     /* 
        If none of our parents lead to the root, then we are the root of a cycle 
        or have no parents.
     */
-    Link *child;
+    Cog *child;
     FORRING(child,t->ring,c) {
       DETACH(child,p);
       debase(child->down,NEXTDEPTH(t->depth));
-      freeThunk(child->down);
+      freeGear(child->down);
     }
     while(t->ring.cRight != &t->ring) {
       child = t->ring.cRight;
       t->ring.cRight = child->cRight;
-      poolFreeU(&linkPool,child);
+      poolFreeU(&cogPool,child);
     }
-    if(!(t->pureVal == NULL
-	 || (t->initializer == evaluate && t->pureVal->owned)))
-      freeValue(t->pureVal);
-    poolFreeU(&thunkPool,t);
+    if(!(t->torque == NULL
+	 || (t->initializer == evaluate && t->torque->owned)))
+      freeTorque(t->torque);
+    poolFreeU(&gearPool,t);
   }
 }
 
-Thunk* pure(Value* v) {
-  Thunk* ret = newThunk();
-  ret->state = PURE;
-  ret->pureVal = v;
+Gear* pure(Torque* v) {
+  Gear* ret = newGear();
+  ret->state = TORQUE;
+  ret->torque = v;
   return ret;
 }
-Thunk* eval(Thunk* t) {
-  Thunk* ret = newThunk();
-  ret->state = THUNK;
+Gear* transmit(Gear* t) {
+  Gear* ret = newGear();
+  ret->state = MESH;
   ret->initializer = evaluate;
-  link(ret,t);
+  cog(ret,t);
   return ret;
 }
 
-Value* force(Thunk* t) {
+Torque* torque(Gear* t) {
   switch(t->state) {
-  case THUNK: {
+  case MESH: {
     t->state = LOCKED;
     t->initializer(t);
-    t->state = PURE;
+    t->state = TORQUE;
     break;
   }
   case LOCKED:
     printf("Locked block\n");
-    while(1); /* We loop for now when encountering a locked thunk. */
+    while(1); /* We loop for now when encountering a locked gear. */
   default:
     break;
   }
-  return t->pureVal;
+  return t->torque;
 }
 
-void replace(Thunk* old,Thunk* new) {
+void replace(Gear* old,Gear* new) {
   if(old != new) {
     invalidate(old);
   
-    Link* parent;
-    Link* next;
+    Cog* parent;
+    Cog* next;
     for(parent = old->ring.pRight; parent != &old->ring;parent = next) {
       next = parent->pRight;
       DETACH(parent,p);
@@ -121,12 +121,12 @@ void replace(Thunk* old,Thunk* new) {
     }
 
     rebase(new,parentDepth(new));
-    freeThunk(old);
+    freeGear(old);
   }
 }
 
-Link* link(Thunk* f,Thunk* s) {
-  Link* l = poolAllocU(&linkPool);
+Cog* cog(Gear* f,Gear* s) {
+  Cog* l = poolAllocU(&cogPool);
   l->down = s;
   ATTACH(l,&s->ring,p);
   
@@ -136,8 +136,8 @@ Link* link(Thunk* f,Thunk* s) {
   return l;
 }
 
-static int parentDepth(Thunk* t) {
-  Link* l;
+static int parentDepth(Gear* t) {
+  Cog* l;
   int depth = MAX_DEPTH;
   FORRING(l,t->ring,p) 
     if(l->up->depth < depth)
@@ -145,16 +145,16 @@ static int parentDepth(Thunk* t) {
   return NEXTDEPTH(depth);
 }
 
-static void invalidate(Thunk* t) {
-  Link* parent;
+static void invalidate(Gear* t) {
+  Cog* parent;
   FORRING(parent,t->ring,p) 
-    if(parent->up->state == PURE) {
-      parent->up->state = THUNK;
+    if(parent->up->state == TORQUE) {
+      parent->up->state = MESH;
       invalidate(parent->up);
     }
 }
-void rebase(Thunk* t,int depth) {
-  Link *child;
+void rebase(Gear* t,int depth) {
+  Cog *child;
   t->depth = depth;
   FORRING(child,t->ring,c) {
     int next = NEXTDEPTH(depth);
@@ -162,41 +162,41 @@ void rebase(Thunk* t,int depth) {
       rebase(child->down,next);
   }
 }
-static void debase(Thunk* t,int depth) {
+static void debase(Gear* t,int depth) {
   if(t->depth == depth) {
-    Link *child;
+    Cog *child;
     t->depth = parentDepth(t);
     FORRING(child,t->ring,c) 
       debase(child->down,NEXTDEPTH(depth));
   }
 }
 
-static void nothing(Thunk* _) { }
-static void evaluate(Thunk* t) {
-  Thunk* child = t->ring.cRight->down;
-  Value* val = force(child);
-  switch(val->shape) {
+static void nothing(Gear* _) { }
+static void evaluate(Gear* t) {
+  Gear* child = t->ring.cRight->down;
+  Torque* val = torque(child);
+  switch(val->unit) {
   case ARRAY: {
     Array* arr = AFTER(val);
 
-    Thunk* ft = arr->data[0]->down;
-    Value* ftVal = force(ft);
+    Gear* ft = arr->data[0]->down;
+    Torque* ftVal = torque(ft);
     
-    switch(ftVal->shape) {
+    switch(ftVal->unit) {
     case FUNCTION: {
       Function* f = AFTER(ftVal);
 
-      t->pureVal = (*f)(arr);
+      t->torque = (*f)(arr);
       break;
     }
     default:
-      t->pureVal = nil();
+      t->torque = nil();
       break;
     }
     break;
   }
   default:
-    t->pureVal = child->pureVal;
+    t->torque = child->torque;
     break;
   }
 }

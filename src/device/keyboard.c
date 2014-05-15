@@ -1,7 +1,7 @@
-#include <core/feature.h>
-#include <cpu/descriptors.h>
-#include <cpu/interrupt.h>
-#include <cpu/pervasives.h>
+#include <util/feature.h>
+#include <x86/descriptors.h>
+#include <x86/interrupt.h>
+#include <x86/pervasives.h>
 #include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/vga.h>

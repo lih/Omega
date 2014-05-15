@@ -1,8 +1,8 @@
 #include <constants.h>
-#include <core/feature.h>
-#include <core/schedule.h>
-#include <cpu/interrupt.h>
-#include <cpu/pervasives.h>
+#include <util/feature.h>
+#include <core/life.h>
+#include <x86/interrupt.h>
+#include <x86/pervasives.h>
 #include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/keyboard.h>
@@ -87,9 +87,9 @@ Feature _exceptions_ = {
 };
 
 void handleException() {
-  TSS* tss = TSS_AT(getTaskRegister());
+  TSS* tss = TSS_AT(getLifeRegister());
   while(1) {
-    TSS* child = TSS_AT(tss->previousTask);
+    TSS* child = TSS_AT(tss->previousLife);
   
     printf("Caught exception in TSS %x\n"
 	   "eax=%x ebx=%x ecx=%x edx=%x\n"
@@ -103,7 +103,7 @@ void handleException() {
 }
 
 void unhandledIRQ() {
-  TSS* ss = TSS_AT(getTaskRegister());
+  TSS* ss = TSS_AT(getLifeRegister());
   while(1) {
     (void)ss;
     asm __volatile__ ( "iret" );

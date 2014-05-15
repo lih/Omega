@@ -1,14 +1,14 @@
 #include <constants.h>
 #include <util/memory.h>
-#include <cpu/descriptors.h>
-#include <core/schedule.h>
+#include <x86/descriptors.h>
+#include <core/life.h>
 #include <core/universe.h>
 #include <device/framebuffer.h>
-#include <core/feature.h>
+#include <util/feature.h>
 #include <device/timer.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
-Pool taskPool = { NULL, sizeof(Task) };
+Pool taskPool = { NULL, sizeof(Life) };
 
 byte stackSlots[MAX_THREADS] = { 0 };
 int  curSlot = 0;
@@ -16,18 +16,18 @@ Selector scheduleGate,slaveGate;
 
 Dir* taskDirectory;
   
-Task activeRoot = {
+Life activeRoot = {
   .next = &activeRoot,
   .prev = &activeRoot,
   .univ = &kernelSpace,
   .tss = (TSS*)KERNEL_STACK,
   .slot = 0
 };
-Task pendingRoot = {
+Life pendingRoot = {
   .next = &pendingRoot,
   .prev = &pendingRoot
 };
-Task waitingRoot = {
+Life waitingRoot = {
   .next = &waitingRoot,
   .prev = &waitingRoot
 };
@@ -45,15 +45,15 @@ static void initSchedule() {
   slaveGate = addDesc(&gdt,tssDesc(activeRoot.tss,0));
   *(activeRoot.tss) = tss(kernelSpace.pageDir,0,0);
 
-  Task* scheduleTask = poolAlloc(&taskPool);
+  Life* scheduleLife = kPoolAlloc(&taskPool);
 
-  scheduleTask->tss = (void*)INT_STACK - sizeof(TSS);
-  *(scheduleTask->tss) = tss(kernelSpace.pageDir,schedule,scheduleTask->tss);
-  scheduleGate = addDesc(&gdt,tssDesc(scheduleTask->tss,0));
+  scheduleLife->tss = (void*)INT_STACK - sizeof(TSS);
+  *(scheduleLife->tss) = tss(kernelSpace.pageDir,schedule,scheduleLife->tss);
+  scheduleGate = addDesc(&gdt,tssDesc(scheduleLife->tss,0));
   
   flushGDT();
 
-  setTaskRegister(slaveGate);
+  setLifeRegister(slaveGate);
 }
 Feature _schedule_ = {
   .state = DISABLED,
@@ -61,29 +61,29 @@ Feature _schedule_ = {
   .initialize = &initSchedule
 };
 
-Task* getTask(Selector gate) {
+Life* getLife(Selector gate) {
   TSS* tss = descBase(DESCRIPTOR_AT(gdt,gate));
-  Task** task = (Task**)dirVal(taskDirectory,tss);
+  Life** task = (Life**)dirVal(taskDirectory,tss);
   
   return *task;
 }
-void detachTask(Task* t) {
+void detachLife(Life* t) {
   t->next->prev = t->prev;
   t->prev->next = t->next;
 }
-void insertTask(Task* a,Task* b) {
+void insertLife(Life* a,Life* b) {
   a->prev = b->prev;
   a->next = b;
   a->next->prev = a;
   a->prev->next = a;
 }
 void scheduleNext(TSS* cur) {
-  DESCRIPTOR_AT(gdt,cur->previousTask) = tssDesc(activeRoot.next->tss,1);
+  DESCRIPTOR_AT(gdt,cur->previousLife) = tssDesc(activeRoot.next->tss,1);
   flushGDT();
 }
 void schedule() {
   require(&_schedule_);
-  TSS* ss = TSS_AT(getTaskRegister());
+  TSS* ss = TSS_AT(getLifeRegister());
 
   while(1) {
     millis += phase;
@@ -92,28 +92,28 @@ void schedule() {
       seconds++;
       /* printf("Second %d\n",seconds); */
     }
-    Task* cur = waitingRoot.next;
-    Task* next;
+    Life* cur = waitingRoot.next;
+    Life* next;
     while(cur != &waitingRoot) {
       next = cur->next;
       if(cur->trig.time.seconds < seconds || 
 	 (cur->trig.time.seconds == seconds && cur->trig.time.millis < millis)) {
-	detachTask(cur);
-	insertTask(cur,&activeRoot);
+	detachLife(cur);
+	insertLife(cur,&activeRoot);
       }
       cur = next;
     }
 
     if(activeRoot.next != &activeRoot) {
-      Task* t = activeRoot.next;
-      detachTask(t);
-      insertTask(t,&activeRoot);
+      Life* t = activeRoot.next;
+      detachLife(t);
+      insertLife(t,&activeRoot);
     }
 
     scheduleNext(ss);
 
     /* printf("Schedule at eip=%x esp=%x tss=%x cr3=%x\n" */
-    /* 	   ,curTask->tss->eip,curTask->tss->esp,curTask->tss,curTask->tss->cr3); */
+    /* 	   ,curLife->tss->eip,curLife->tss->esp,curLife->tss,curLife->tss->cr3); */
 
     outportb(0x20, 0x20);
     asm __volatile__ ( "iret" );
@@ -130,7 +130,7 @@ int findNextSlot() {
 
   return curSlot;
 }
-Universe* univAt(Task* t,int index) {
+Universe* univAt(Life* t,int index) {
   switch(index) {
   case -2:
     return t->from;
@@ -151,25 +151,25 @@ Universe* univAt(Task* t,int index) {
 }
 
 void releaseSem(Semaphore* paddr,int n) {
-  Task* curTask = pendingRoot.next;
-  while(curTask != &pendingRoot) {
-    if(curTask->trig.sem == paddr) {
-      Task* next = curTask->next;
-      detachTask(curTask);
-      insertTask(curTask,&activeRoot);
-      curTask->tss->eax = *paddr + n;
+  Life* curLife = pendingRoot.next;
+  while(curLife != &pendingRoot) {
+    if(curLife->trig.sem == paddr) {
+      Life* next = curLife->next;
+      detachLife(curLife);
+      insertLife(curLife,&activeRoot);
+      curLife->tss->eax = *paddr + n;
       n--;
       if(n == 0)
 	break;
-      curTask = next;
+      curLife = next;
     }
     else
-      curTask = curTask->next;
+      curLife = curLife->next;
   }
   *paddr += n;
 }
 
-void sys_spark(Task* task) {
+void sys_spark(Life* task) {
   Universe* univ = univAt(task,task->tss->ebx);
   void* eip = (void*)task->tss->ecx;
 
@@ -178,25 +178,25 @@ void sys_spark(Task* task) {
     
   int i;
   for(i=0;i<STACK_PAGES;i++) {
-    void* pg = allocatePage();
+    void* pg = kAllocPage();
     mapPage(univ,STACK_PAGE(vaddr,i),pg,1);
     mapPage(&kernelSpace,STACK_PAGE(vaddr,i),pg,1);
   }
   
-  Task* newtask = poolAlloc(&taskPool); {
+  Life* newtask = kPoolAlloc(&taskPool); {
     newtask->tss = (void*)vaddr-sizeof(TSS);
     *(newtask->tss) = tss(univ->pageDir,eip,newtask->tss);
     newtask->tss->eflags._if = 1;
     newtask->tss->eflags.iopl = univ->dpl;
     *dirVal(taskDirectory,newtask->tss) = (DirEntry)newtask;
 
-    insertTask(newtask,&activeRoot);
+    insertLife(newtask,&activeRoot);
     newtask->slot = slot;
     newtask->univ = univ;
   }
 }
-void sys_die(Task* task) {
-  detachTask(task);
+void sys_die(Life* task) {
+  detachLife(task);
 
   int i; dword start = STACK_START(task->slot);
   for(i=0;i<STACK_PAGES;i++)
@@ -204,9 +204,9 @@ void sys_die(Task* task) {
 
   stackSlots[task->slot] = 0;
 
-  poolFree(&taskPool,task);
+  kPoolFree(&taskPool,task);
 }
-void sys_warp(Task* task) {
+void sys_warp(Life* task) {
   Universe* u = univAt(task,task->tss->ebx);
   dword eip = task->tss->ecx;
   dword start = STACK_START(task->slot);
@@ -226,7 +226,7 @@ void sys_warp(Task* task) {
   task->from = task->univ;
   task->univ = u;
 }
-void sys_acquire(Task* task) {
+void sys_acquire(Life* task) {
   void* vaddr = (void*)task->tss->ebx;
 
   DirEntry* d = dirVal(task->univ->pageDir,vaddr);
@@ -235,14 +235,14 @@ void sys_acquire(Task* task) {
   if(*paddr == 0) {
     task->trig.sem = paddr;
   
-    detachTask(task);
-    insertTask(task,pendingRoot.next);
+    detachLife(task);
+    insertLife(task,pendingRoot.next);
   }
   else
     (*paddr)--;
 }
 
-void sys_release(Task* task) {
+void sys_release(Life* task) {
   void* vaddr = (void*)task->tss->ebx;
   int n = task->tss->ecx;
 
@@ -251,7 +251,7 @@ void sys_release(Task* task) {
   
   releaseSem(paddr,n);
 }
-void sys_mapTo(Task* task) {
+void sys_mapTo(Life* task) {
   Universe* dest = univAt(task,task->tss->ebx);
   void* from = (void*)task->tss->ecx;
   void* to = (void*)task->tss->edx;
@@ -263,7 +263,7 @@ void sys_mapTo(Task* task) {
     mapPage(dest,to,paddr,1);
   }
 }
-void sys_mapFrom(Task* task) {
+void sys_mapFrom(Life* task) {
   Universe* dest = univAt(task,task->tss->ebx);
   void* from = (void*)task->tss->ecx;
   void* to = (void*)task->tss->edx;
@@ -275,22 +275,22 @@ void sys_mapFrom(Task* task) {
     mapPage(task->univ,to,paddr,1);
   }
 }
-void sys_spawn(Task* t) {
+void sys_spawn(Life* t) {
   Universe* u = newUniverse(t->univ);
 
   t->tss->eax = u->index;
 }
-void sys_anihilate(Task* t) {
+void sys_anihilate(Life* t) {
   Universe* u = univAt(t,t->tss->ebx);
 
   freeUniverse(u);
 }
-void sys_wait(Task* task) {
+void sys_wait(Life* task) {
   int secs = task->tss->ebx,
     ms = task->tss->ecx;
   
-  detachTask(task);
-  insertTask(task,&waitingRoot);
+  detachLife(task);
+  insertLife(task,&waitingRoot);
 
   task->trig.time.seconds = secs + seconds;
   task->trig.time.millis = millis + (ms*FREQUENCY)/1000;
@@ -299,11 +299,11 @@ void sys_wait(Task* task) {
     task->trig.time.millis -= FREQUENCY;
   }
 }
-void sys_alloc(struct Task* t) {
+void sys_alloc(struct Life* t) {
   void* vpage = (void*)t->tss->ebx;
   int n = t->tss->ecx;
 
   int i;
   for(i=0;i<n;i++)
-    mapPage(t->univ,vpage+(i*PAGE_SIZE),allocatePage(),1);
+    mapPage(t->univ,vpage+(i*PAGE_SIZE),kAllocPage(),1);
 }

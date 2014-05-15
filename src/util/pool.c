@@ -10,7 +10,7 @@ static void* allocPage() {
   return ret;
 }
 
-void* poolAllocU(Pool* pool) {
+void* poolAlloc(Pool* pool) {
   if(IS(pool->head,0)) {
     /* We allocate a new page for our pool */
     void* newp = allocPage();
@@ -32,7 +32,7 @@ void* poolAllocU(Pool* pool) {
   
   return ret;
 }
-void poolFreeU(Pool* pool,void* block) {
+void poolFree(Pool* pool,void* block) {
   PoolBlock* newh = block;
   newh->next = pool->head;
   pool->head = newh;

@@ -1,6 +1,6 @@
 #include <device/acpi.h>
 #include <device/framebuffer.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 RSDP* rsdp;
 FADT* fadt;

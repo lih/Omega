@@ -1,6 +1,6 @@
-#include <core/schedule.h>
-#include <cpu/interrupt.h>
-#include <cpu/pervasives.h>
+#include <core/life.h>
+#include <x86/interrupt.h>
+#include <x86/pervasives.h>
 #include <device/framebuffer.h>
 #include <device/timer.h>
 

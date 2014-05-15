@@ -2,23 +2,23 @@
 #define INCLUDED_SYSCALL
 
 #include <core/universe.h>
-#include <core/schedule.h>
+#include <core/life.h>
 
 extern Feature _syscalls_;
 typedef void (*BIOSFun)();
 
-void sys_die(Task*);
-void sys_spark(Task*);
-void sys_warp(Task*);
-void sys_alloc(Task*);
-void sys_acquire(Task*);
-void sys_release(Task*);
-void sys_mapTo(Task*);
-void sys_mapFrom(Task*);
-void sys_spawn(Task*);
-void sys_anihilate(Task*);
-void sys_wait(Task*);
-void sys_bios(Task*);
+void sys_die(Life*);
+void sys_spark(Life*);
+void sys_warp(Life*);
+void sys_alloc(Life*);
+void sys_acquire(Life*);
+void sys_release(Life*);
+void sys_mapTo(Life*);
+void sys_mapFrom(Life*);
+void sys_spawn(Life*);
+void sys_anihilate(Life*);
+void sys_wait(Life*);
+void sys_bios(Life*);
 
 void bios_mode13h();
 void bios_mode03h();

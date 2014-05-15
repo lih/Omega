@@ -4,10 +4,10 @@
 #include <util/memory.h>
 
 typedef enum {
-  NIL, NUMBER, STRING, ARRAY, DICTIONARY, FUNCTION
+  NIL, NUMBER, STRING, ARRAY, DICTIONARY, FUNCTION, COG
 } Unit;
 typedef struct {
-  Unit unit:24; byte owned;
+  Unit unit;
   byte data[0];
 } PACKED Torque; 
 
@@ -19,7 +19,7 @@ typedef struct {
   int size;
   struct Cog* data[0];
 } Array;
-typedef Torque* (*Function)(Array* arr);
+typedef struct Gear* (*Function)(Array* arr);
 
 Torque* number(int);
 Torque* string(char*);
@@ -27,6 +27,7 @@ Torque* array(int n,...);
 Torque* func(Function);
 Torque* nil();
 Torque* dictionary();
+Torque* cog(struct Cog*);
 
 void freeTorque(Torque*);
 

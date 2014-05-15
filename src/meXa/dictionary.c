@@ -24,13 +24,12 @@ void define(char* key,Gear* new) {
 }
 
 Gear* lookup(Gear* map,char* key) {
-  Torque* v = torque(map);
+  Torque* v = force(map);
   if(v->unit == DICTIONARY) {
     Map* root = AFTER(v);
     MapNode* n = getNode(root,key);
     if(n->cog == NULL) 
-      n->cog = cog(map,pure(nil()));
-    rebase(n->cog->down,1);
+      n->cog = mesh(map,pure(nil()));
     return n->cog->down;
   }
   else {
@@ -62,7 +61,7 @@ void setHeight(Map n) {
 MapNode* getNode(Map* root,char* key) {
 #define rootp (*root)
   if(rootp == EMPTY) {
-    rootp = poolAllocU(&nodePool);
+    rootp = poolAlloc(&nodePool);
     int l = strlen(key);
     char* newKey = newArray(l+1);
     memcpy(newKey,key,l+1);

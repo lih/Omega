@@ -5,7 +5,7 @@
 page* page_head;
 int page_count;
 
-void* allocatePage() {
+void* kAllocPage() {
   void* ret = NULL;
   if(page_head != NULL) {
     ret = page_head;
@@ -15,7 +15,7 @@ void* allocatePage() {
   return ret;
 }
 
-void freePage(void* _p) {
+void kFreePage(void* _p) {
   page* old = page_head;
   page_head = _p;
   page_head->next = old;
@@ -58,10 +58,10 @@ Feature _memory_ = {
   .initialize = &initialize
 };
 
-void* poolAlloc(Pool* pool) {
+void* kPoolAlloc(Pool* pool) {
   if(IS(pool->head,0)) {
     /* We allocate a new page for our pool */
-    void* newp = allocatePage();
+    void* newp = kAllocPage();
     PoolBlock* last = 0;
     int limit = PAGE_SIZE - pool->blockSize;
 
@@ -80,7 +80,7 @@ void* poolAlloc(Pool* pool) {
   
   return ret;
 }
-void poolFree(Pool* pool,void* block) {
+void kPoolFree(Pool* pool,void* block) {
   PoolBlock* newh = block;
   newh->next = pool->head;
   pool->head = newh;

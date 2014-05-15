@@ -21,7 +21,7 @@ void* newArray(int size) {
   int i = 0;
   int total = size + sizeof(int);
   while((1<<(i+2))<total) i++;
-  int* ret = poolAllocU(&smallPools[i]);
+  int* ret = poolAlloc(&smallPools[i]);
   *ret = total;
   return ret+1;
 }
@@ -29,5 +29,5 @@ void freeArray(void* arr) {
   int* size = arr - sizeof(int);
   int i=0;
   while((1<<(i+2))<*size) i++;
-  poolFreeU(&smallPools[i],size);  
+  poolFree(&smallPools[i],size);  
 }

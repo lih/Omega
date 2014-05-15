@@ -2,7 +2,7 @@
 #define INCLUDED_INTERRUPT
 
 #include <util/memory.h>
-#include <core/schedule.h>
+#include <core/life.h>
 #include <constants.h>
 
 typedef struct {
@@ -12,7 +12,7 @@ typedef struct {
   dword eip, cs, eflags, useresp, ss;		/* pushed by the processor automatically */ 
 } PACKED IDTParams;
 typedef void(*IDTHandler)(IDTParams*);
-typedef void(*SyscallHandler)(struct Task*);
+typedef void(*SyscallHandler)(struct Life*);
 
 extern Feature _interrupts_,_exceptions_,_irqs_,_syscalls_;
 

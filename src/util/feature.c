@@ -1,5 +1,5 @@
 #include <util/memory.h>
-#include <core/feature.h>
+#include <util/feature.h>
 #include <device/framebuffer.h>
 
 dword featureDepth = 0;

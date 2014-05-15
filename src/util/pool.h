@@ -3,7 +3,7 @@
 
 #include <util/memory.h>
 
-void* poolAllocU(Pool* pool);
-void poolFreeU(Pool* pool,void* p);
+void* poolAlloc(Pool* pool);
+void poolFree(Pool* pool,void* p);
 
 #endif

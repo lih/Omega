@@ -1,5 +1,5 @@
 #include <device/vga/common.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 byte getVGAReg(VGAReg* r) {
   switch(r->addr) {

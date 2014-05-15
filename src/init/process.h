@@ -1,7 +1,7 @@
 #ifndef INCLUDED_PROCESS
 #define INCLUDED_PROCESS
 
-#include <core/feature.h>
+#include <util/feature.h>
 #include <core/universe.h>
 
 extern Feature _process_;

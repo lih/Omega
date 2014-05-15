@@ -2,7 +2,7 @@
 #define INCLUDED_MEMORY
 
 #include <constants.h>
-#include <core/feature.h>
+#include <util/feature.h>
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -24,8 +24,8 @@ typedef union page {
 extern Feature _memory_;
 extern int page_count;
 
-void* allocatePage();
-void freePage(void*);
+void* kAllocPage();
+void kFreePage(void*);
 
 void memcpy(void* dst, void* src, int n);
 int strlen(char* s);
@@ -44,7 +44,7 @@ typedef struct {
   int blockSize;
 } Pool;
 
-void* poolAlloc(Pool* pool);
-void poolFree(Pool* pool,void* p);
+void* kPoolAlloc(Pool* pool);
+void kPoolFree(Pool* pool,void* p);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef INCLUDED_TIMER
 #define INCLUDED_TIMER
 
-#include <core/feature.h>
+#include <util/feature.h>
 
 #define FREQUENCY 1193180
 

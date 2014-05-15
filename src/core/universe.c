@@ -1,10 +1,10 @@
 #include <constants.h>
 #include <util/memory.h>
 #include <core/universe.h>
-#include <core/schedule.h>
+#include <core/life.h>
 #include <device/framebuffer.h>
 #include <core/syscall.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 #define F_PRESENT 1
 #define F_RW      2
@@ -28,7 +28,7 @@ Universe kernelSpace = {
 Pool univPool = { NULL, sizeof(Universe) };
 
 Dir* newDir() {
-  Dir* ret = allocatePage();
+  Dir* ret = kAllocPage();
   int i;
   for(i=0;i<DIR_SIZE;i++)
     (*ret)[i] = NULL;
@@ -38,22 +38,22 @@ void freeDir(Dir* d) {
   int i;
   for(i=0;i<DIR_SIZE;i++) {
     void* pg = F_ADDR((*d)[i]);
-    if(pg != 0) freePage(pg);
+    if(pg != 0) kFreePage(pg);
   }
-  freePage(*d);
+  kFreePage(*d);
 }
 
 Universe* newUniverse(Universe* father) {
   require(&_memory_);
   
-  Universe* ret = poolAlloc(&univPool);
+  Universe* ret = kPoolAlloc(&univPool);
   SET_STRUCT(Universe,*ret,{
       .pageDir = newDir(), 
 	.dpl = 0,
 	.index = father->down->index,
 	.up = father,
 	.left = father->down->left, .right = father->down,
-	.down = poolAlloc(&univPool)
+	.down = kPoolAlloc(&univPool)
 	});
   father->down->index++;
 
@@ -70,13 +70,13 @@ void freeUniverse(Universe* u) {
   Universe* fence = u->down;
   while(fence->right != fence)
     freeUniverse(fence->right);
-  poolFree(&univPool,fence);
+  kPoolFree(&univPool,fence);
 
-  Task* roots[3] = { &activeRoot, &pendingRoot, &waitingRoot };
+  Life* roots[3] = { &activeRoot, &pendingRoot, &waitingRoot };
   int i;
   for(i=0;i<3;i++) {
-    Task* cur = roots[i]->next;
-    Task* next;
+    Life* cur = roots[i]->next;
+    Life* next;
     while(cur != roots[i]) {
       next = cur->next;
       if(cur->univ == u) 
@@ -86,7 +86,7 @@ void freeUniverse(Universe* u) {
   }
 
   freeDir(u->pageDir);
-  poolFree(&univPool,u);
+  kPoolFree(&univPool,u);
 }
 
 DirEntry* dirVal(Dir* dir,void* _vpage) {
@@ -115,7 +115,7 @@ static void initUniverse() {
     (*pgDir)[i] = 0;
   
   kernelSpace.pageDir = pgDir;
-  kernelSpace.down = poolAlloc(&univPool);
+  kernelSpace.down = kPoolAlloc(&univPool);
   kernelSpace.down->index = 0;
   kernelSpace.down->right = kernelSpace.down;
   kernelSpace.down->left = kernelSpace.down;
@@ -138,7 +138,7 @@ void mapPage(Universe* univ,void* vpage,void* page,byte rw) {
     (*oldCounter)--;
     
     if(IS(*oldCounter,0))
-      freePage(F_ADDR(*oldmap));
+      kFreePage(F_ADDR(*oldmap));
   }
   
   page = (void*)((dword)page & 0xfffff000);

@@ -4,7 +4,7 @@ extern  gdt, idt, kernelSpace
 global nop, flushGDT, getIP, \
 	outportb,inportb,inportw,outportw, \
 	setPageDirectory,enablePaging,disablePaging, \
-	getTaskRegister,setTaskRegister,getPL, compareAndSet, \
+	getLifeRegister,setLifeRegister,getPL, compareAndSet, \
 	realMode, protectedMode
 
 getIP:
@@ -123,11 +123,11 @@ flush_cs:
 	mov gs,ax
 	ret
 
-getTaskRegister:
+getLifeRegister:
 	xor eax,eax
 	str ax
 	ret
-setTaskRegister:
+setLifeRegister:
 	mov ax,[esp+4]
 	ltr ax
 	ret

@@ -1,7 +1,7 @@
 #ifndef INCLUDED_VGA
 #define INCLUDED_VGA
 
-#include <core/feature.h>
+#include <util/feature.h>
 #include <device/vga/crtc.h>
 #include <device/vga/sequencer.h>
 #include <device/vga/attributes.h>

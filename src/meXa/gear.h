@@ -37,10 +37,11 @@ Gear* transmit(Gear*);
 Gear* newGear();
 void freeGear(Gear*);
 
-Torque* torque(Gear*);
+Torque* force(Gear*);
+Torque* reduce(Gear*);
 void replace(Gear* old, Gear* new);
 
-Cog* cog(Gear* father,Gear* son);
+Cog* mesh(Gear* father,Gear* son);
 void rebase(Gear* t, int n);
 
 #endif

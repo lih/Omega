@@ -5,7 +5,7 @@
 #include <device/vga.h>
 #include <init/ping.h>
 #include <meXa.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 #define TRI(x) (x + (x<<2) + (x<<4))
 #define DUB(x) (x + ((x&0xc)<<2))

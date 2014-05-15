@@ -1,8 +1,8 @@
 #ifndef INCLUDED_UNIVERSE
 #define INCLUDED_UNIVERSE
 
-#include <cpu/descriptors.h>
-#include <core/feature.h>
+#include <x86/descriptors.h>
+#include <util/feature.h>
 
 typedef int UIndex;
 typedef struct Universe {

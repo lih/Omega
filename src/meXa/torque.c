@@ -13,7 +13,8 @@ void freeTorque(Torque* v) {
   case NUMBER:
   case FUNCTION:
   case DICTIONARY:
-    poolFreeU(&numPool,v);
+  case COG:
+    poolFree(&numPool,v);
     break;
   case NIL:
     break;
@@ -23,19 +24,25 @@ void freeTorque(Torque* v) {
 }
 
 Torque* number(int n) {
-  Torque* ret = poolAllocU(&numPool);
+  Torque* ret = poolAlloc(&numPool);
   ret->unit = NUMBER;
-  ret->owned = 1;
 
   int* v = (int*)&ret->data;
   *v = n;
+  return ret;
+}
+Torque* cog(Cog* c) {
+  Torque* ret = poolAlloc(&numPool);
+  ret->unit = COG;
+
+  Cog** v = (Cog**)&ret->data;
+  *v = c;
   return ret;
 }
 Torque* string(char* s) {
   int l = strlen(s);
   Torque* ret = newArray(sizeof(Torque) + sizeof(String) + l + 1);
   ret->unit = STRING;
-  ret->owned = 1;
 
   String* str = AFTER(ret);
   str->sz = l;
@@ -47,7 +54,6 @@ Torque* array(int n,...) {
   Cog** args = AFTER(&n);
   Torque* ret = newArray(sizeof(Torque) + sizeof(Array) + n*sizeof(Gear*));
   ret->unit = ARRAY;
-  ret->owned = 1;
 
   Array* arr = AFTER(ret);
   int i;
@@ -58,9 +64,8 @@ Torque* array(int n,...) {
   return ret;
 }
 Torque* func(Function f) {
-  Torque* ret = poolAllocU(&numPool);
+  Torque* ret = poolAlloc(&numPool);
   ret->unit = FUNCTION;
-  ret->owned = 1;
   Function* f2 = AFTER(ret);
   *f2 = f;
   return ret;
@@ -69,9 +74,8 @@ Torque* nil() {
   return &nilVal;
 }
 Torque* dictionary() {
-  Torque* ret = poolAllocU(&numPool);
+  Torque* ret = poolAlloc(&numPool);
   ret->unit = DICTIONARY;
-  ret->owned = 1;
   Map* m = AFTER(ret);
   *m = EMPTY;
   return ret;
@@ -95,7 +99,7 @@ void showTorque(Torque* v) {
     Array* arr = AFTER(v);
     for(i=0;i<arr->size;i++) {
       if(i!=0) putChar(' ');
-      showTorque(torque(arr->data[i]->down));
+      showTorque(force(arr->data[i]->down));
     }
     putChar(']');
     break;
@@ -105,6 +109,9 @@ void showTorque(Torque* v) {
     break;
   case DICTIONARY:
     printf("DICTIONARY");
+    break;
+  case COG:
+    printf("COG");
     break;
   case NIL:
     printf("NIL");

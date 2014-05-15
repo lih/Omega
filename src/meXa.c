@@ -1,4 +1,4 @@
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 #include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/keyboard.h>
@@ -49,63 +49,58 @@ int identEq(PState* pstate) {
 #undef IDENT
 #define IDENT identEq(pstate)
 
-Torque* disowned(Torque* v) {
-  v->owned = 0;
-  return v;
-}
-
-Torque* array_at(Array* arr) {
+Gear* array_at(Array* arr) {
   if(arr->size == 3) {
-    Torque* varr = torque(arr->data[1]->down);
-    Torque* vn = torque(arr->data[2]->down);
+    Torque* varr = reduce(arr->data[1]->down);
+    Torque* vn = reduce(arr->data[2]->down);
     if(varr->unit == ARRAY && vn->unit == NUMBER) {
       int* n = AFTER(vn);
       Array* arr = AFTER(varr);
-      return torque(arr->data[*n]->down);
+      return arr->data[*n]->down;
     }
     else if(varr->unit == DICTIONARY && vn->unit == STRING) {
       String* s = AFTER(vn);
-      return torque(lookup(arr->data[1]->down,s->data));      
+      return lookup(arr->data[1]->down,s->data);      
     }
     else printf("Wrong argument types for array_at\n");
   }
   else
     printf("Wrong number of arguments for function array_at\n");
   
-  return nil();
+  return pure(nil());
 }
-Torque* builtin_if(Array* args) {
+Gear* builtin_if(Array* args) {
   if(args->size == 4) {
-    Torque* cond = torque(args->data[1]->down);
+    Torque* cond = reduce(args->data[1]->down);
     if(cond->unit == NIL)
-      return torque(args->data[3]->down);
+      return args->data[3]->down;
     else
-      return torque(args->data[2]->down);
+      return args->data[2]->down;
   }
   else
     printf("Wrong number of arguments to 'if' function\n");
-  return nil();
+  return pure(nil());
 }
-Torque* builtin_plus(Array* args) {
+Gear* builtin_plus(Array* args) {
   int ret = 0;
   int i;
   for(i=1;i<args->size;i++) {
-    Torque* v = torque(args->data[i]->down);
+    Torque* v = reduce(args->data[i]->down);
     if(v->unit == NUMBER)
       ret += *(int*)AFTER(v);
   }
-  return disowned(number(ret));
+  return pure(number(ret));
 }
-#define VALUE_AT(a,i) torque((a)->data[i]->down)
-Torque* builtin_eq(Array* args) {
+#define VALUE_AT(a,i) reduce((a)->data[i]->down)
+Gear* builtin_eq(Array* args) {
   if(args->size == 3) {
     Torque *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
     if(a->unit == NUMBER && b->unit == NUMBER) {
       int xa = *(int*)AFTER(a), xb = *(int*)AFTER(b);
-      return (xa==xb ? disowned(number(0)) : nil());
+      return pure(xa==xb ? number(0) : nil());
     } 
   }
-  return nil();
+  return pure(nil());
 }
 
 void repl() {
@@ -130,7 +125,7 @@ void repl() {
     FREE;
     Gear* t = EXPR;
     if(t != NULL) {
-      Torque* v = torque(t);
+      Torque* v = reduce(t);
       printStr("= "); showTorque(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];

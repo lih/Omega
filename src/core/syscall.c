@@ -1,8 +1,8 @@
-#include <cpu/interrupt.h>
+#include <x86/interrupt.h>
 #include <core/syscall.h>
-#include <cpu/descriptors.h>
-#include <core/schedule.h>
-#include <cpu/pervasives.h>
+#include <x86/descriptors.h>
+#include <core/life.h>
+#include <x86/pervasives.h>
 #include <device/framebuffer.h>
 
 Selector sysGate;
@@ -26,17 +26,17 @@ BIOSFun biosFuns[] = {
   bios_mode03h, bios_mode13h
 };
 
-void sys_bios(Task* t) {
+void sys_bios(Life* t) {
   dword ind = t->tss->ebx;
 
   if(ind < SZ(biosFuns)) 
     realMode(biosFuns[ind]);
 }
 void handleSyscalls() {
-  TSS* ss = TSS_AT(getTaskRegister());
+  TSS* ss = TSS_AT(getLifeRegister());
 
   while(1) {
-    Task* state = getTask(ss->previousTask);
+    Life* state = getLife(ss->previousLife);
     dword scnum = state->tss->eax;
     SyscallHandler f;
 

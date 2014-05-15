@@ -1,9 +1,9 @@
 #ifndef INCLUDED_KEYBOARD
 #define INCLUDED_KEYBOARD
 
-#include <core/feature.h>
-#include <cpu/descriptors.h>
-#include <core/schedule.h>
+#include <util/feature.h>
+#include <x86/descriptors.h>
+#include <core/life.h>
 
 extern Feature _keyboard_;
 

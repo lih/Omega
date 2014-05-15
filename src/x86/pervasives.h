@@ -12,8 +12,8 @@ void	enablePaging();
 void	disablePaging();
 void    setPageDirectory(void* pd);
 
-void    setTaskRegister(word reg);
-word    getTaskRegister();
+void    setLifeRegister(word reg);
+word    getLifeRegister();
 
 byte	inportb(word _port);
 void	outportb(word _port,byte _msg);

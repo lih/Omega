@@ -1,4 +1,4 @@
-#include <cpu/descriptors.h>
+#include <x86/descriptors.h>
 #include <device/framebuffer.h>
 
 Descriptor idts[256] = { { } };

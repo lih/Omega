@@ -51,7 +51,7 @@ Gear* atom(PState* pstate) {
       Gear* sub = EXPR; FREE;
       if(sub == NULL)
 	break;
-      arr->data[n] = cog(ret,sub);
+      arr->data[n] = mesh(ret,sub);
       n++;
     } while(CUR != ']');
     arr->size = n;
@@ -110,7 +110,7 @@ Gear* expr(PState* pstate) {
       Gear* b = ATOM;
       if(o == NULL || b == NULL) return NULL;
       Gear* ret = newGear();
-      Cog* la = cog(ret,a), *lb = cog(ret,b), *lo = cog(ret,o);
+      Cog* la = mesh(ret,a), *lb = mesh(ret,b), *lo = mesh(ret,o);
     
       ret->state = TORQUE;
       ret->torque = array(3,lo,la,lb);
@@ -125,7 +125,7 @@ Gear* expr(PState* pstate) {
       if(f == NULL) return NULL;
     
       Gear* ret = newGear();
-      Cog* la = cog(ret,a), *lf = cog(ret,f);
+      Cog* la = mesh(ret,a), *lf = mesh(ret,f);
     
       ret->state = TORQUE;
       ret->torque = array(2,lf,la);

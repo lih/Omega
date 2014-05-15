@@ -1,7 +1,7 @@
 #include <device/vga.h>
 #include <util/memory.h>
 #include <device/framebuffer.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 VGAReg miscOutput = REG(MISC,0);
 

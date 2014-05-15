@@ -1,7 +1,7 @@
 #include <device/framebuffer.h>
 #include <util/memory.h>
 #include <constants.h>
-#include <cpu/pervasives.h>
+#include <x86/pervasives.h>
 
 #define LINE_SIZE (80*2)
 

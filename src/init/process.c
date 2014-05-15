@@ -1,10 +1,10 @@
-#include <core/schedule.h>
+#include <core/life.h>
 #include <core/universe.h>
 #include <constants.h>
 #include <core/syscall.h>
 #include <device/framebuffer.h>
 #include <device/vga.h>
-#include <cpu/interrupt.h>
+#include <x86/interrupt.h>
 #include <init/init.h>
 
 Universe* initUniv;

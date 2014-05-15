@@ -3,7 +3,7 @@
 
 #include <constants.h>
 #include <util/memory.h>
-#include <core/feature.h>
+#include <util/feature.h>
 
 typedef struct {
   char signature[8];

@@ -1,7 +1,7 @@
 #ifndef INCLUDED_SCHEDULE
 #define INCLUDED_SCHEDULE
 
-#include <cpu/descriptors.h>
+#include <x86/descriptors.h>
 #include <core/universe.h>
 
 #define MAX_THREADS 1024
@@ -18,22 +18,22 @@ typedef union {
   Semaphore* sem;
   Time time;
 } Trigger;
-typedef struct Task {
-  struct Task* next;
-  struct Task* prev;
+typedef struct Life {
+  struct Life* next;
+  struct Life* prev;
   TSS* tss;
   Universe* univ;
   Universe* from;
   int slot;
   Trigger trig;
-} Task;
+} Life;
 
 extern Feature _schedule_;
-extern Task activeRoot,pendingRoot,waitingRoot;
+extern Life activeRoot,pendingRoot,waitingRoot;
 
 extern Selector scheduleGate;
 
-Task* getTask(Selector gate);
+Life* getLife(Selector gate);
 
 void scheduleNext(TSS* cur);
 void releaseSem(Semaphore*,int);

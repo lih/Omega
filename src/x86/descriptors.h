@@ -50,7 +50,7 @@ typedef struct {
   Descriptor* base;
 } PACKED TablePtr;
 typedef struct {
-  word previousTask, _1;
+  word previousLife, _1;
   dword esp0; word ss0,_2;
   dword esp1; word ss1,_3;
   dword esp2; word ss2,_4;

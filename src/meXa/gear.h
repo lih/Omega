@@ -39,9 +39,13 @@ void freeGear(Gear*);
 
 Torque* force(Gear*);
 Torque* reduce(Gear*);
+
 void replace(Gear* old, Gear* new);
 
 Cog* mesh(Gear* father,Gear* son);
+void unmesh(Cog* c);
+
 void rebase(Gear* t, int n);
+void debase(Gear* t, int n);
 
 #endif

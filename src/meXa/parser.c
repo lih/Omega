@@ -38,27 +38,34 @@ Gear* atom(PState* pstate) {
   switch(classes[CUR]) {
   case OPAREN: { 
     char start = CUR;
-    Torque* gears = newArray(sizeof(Torque) + sizeof(Array) + 16*sizeof(Gear*));
-    gears->unit = ARRAY;
-    Array* arr = AFTER(gears);
-    arr->size = 0;
-    Gear* ret = pure(gears);
-    
+    Gear* gears[16];
     int n = 0;
-    FORWARD; FREE;
+
     pstate->depth++;
+    FORWARD; FREE;
     do {
-      Gear* sub = EXPR; FREE;
-      if(sub == NULL)
+      gears[n] = EXPR; FREE;
+      if(gears[n] == NULL)
 	break;
-      arr->data[n] = mesh(ret,sub);
       n++;
     } while(CUR != ']');
-    arr->size = n;
     FORWARD;
     pstate->depth--;
         
-    return (start=='[' ? ret : transmit(ret));
+    if(start=='(' && n==1) 
+      return gears[0];
+    else {
+      Torque* tor = newArray(sizeof(Torque) + sizeof(Array) + n*sizeof(Gear*));
+      tor->unit = ARRAY;
+      Array* arr = AFTER(tor);
+      arr->size = 0;
+      Gear* ret = pure(tor);
+      int i;
+      for(i=0;i<n;i++)
+	arr->data[i] = mesh(ret,gears[i]);
+
+      return (start=='[' ? ret : transmit(ret));
+    }
   }
   case CPAREN: {
     if(pstate->depth == 0) {

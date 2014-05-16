@@ -36,7 +36,6 @@ Gear rootGear = {
   }
 };
 
-static void debase(Gear* t,int depth);
 static int parentDepth(Gear* t);
 static void invalidate(Gear* t);
 
@@ -181,7 +180,7 @@ void rebase(Gear* t,int newdepth) {
       rebase(child->down,NEXTDEPTH(newdepth));
   }
 }
-static void debase(Gear* t,int depth) {
+void debase(Gear* t,int depth) {
   if(t->depth == depth) {
     Cog *child;
     t->depth = parentDepth(t);

@@ -23,6 +23,7 @@ typedef union page {
 
 extern Feature _memory_;
 extern int page_count;
+extern int alloc_count;
 
 void* kAllocPage();
 void kFreePage(void*);

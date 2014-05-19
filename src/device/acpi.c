@@ -11,7 +11,7 @@ SDTable* findSDTable(char*);
 static void initACPI() {
   rsdp = findRSDP();
   fadt = (FADT*) findSDTable("FACP");
-  
+
   if(fadt->smiCommandPort != 0
      && (fadt->acpiEnable == 0 || fadt->acpiDisable)) {
     /* Enable ACPI if it wasn't already initialized by the system */
@@ -33,9 +33,11 @@ RSDP* findRSDP() {
   dword* hdr = (dword*)&rsdHeader;
   dword* i;
 
-  for(i=0;i<(dword*)4096;i+=(16/sizeof(*i)))
+  for(i=(dword*)0x400;i<(dword*)0x500;i+=4) {
     if(i[0] == hdr[0] && i[1] == hdr[1])
       return (RSDP*)i;
+  }
+
   for(i=(dword*)0xe0000;i<(dword*)0x100000;i+=16/(sizeof(*i)))
     if(i[0] == hdr[0] && i[1] == hdr[1])
       return (RSDP*)i;

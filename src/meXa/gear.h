@@ -33,19 +33,21 @@ typedef struct Gear {
 extern Gear rootGear;
 
 Gear* pure(Torque*);
-Gear* transmit(Gear*);
+Gear* mesh(Gear*);
 Gear* newGear();
 void freeGear(Gear*);
 
 Torque* force(Gear*);
-Torque* reduce(Gear*);
+Torque* torque(Gear*);
 
 void replace(Gear* old, Gear* new);
 
-Cog* mesh(Gear* father,Gear* son);
-void unmesh(Cog* c);
+Cog* link(Gear* father,Gear* son);
+void unlink(Cog* c);
 
 void rebase(Gear* t, int n);
 void debase(Gear* t, int n);
+
+Gear* instanciate(Array* args);
 
 #endif

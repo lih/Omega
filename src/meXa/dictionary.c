@@ -23,13 +23,21 @@ void define(char* key,Gear* new) {
   replace(old,new);
 }
 
+void forNodes(Map m,void* d,void (*f)(MapNode*,void*)) {
+  if(m != EMPTY) {
+    forNodes(m->left,d,f);
+    f(m,d);
+    forNodes(m->right,d,f);
+  }
+}
+
 Gear* lookup(Gear* map,char* key) {
   Torque* v = force(map);
   if(v->unit == DICTIONARY) {
     Map* root = AFTER(v);
     MapNode* n = getNode(root,key);
     if(n->cog == NULL) 
-      n->cog = mesh(map,pure(nil()));
+      n->cog = link(map,pure(nil()));
     return n->cog->down;
   }
   else {

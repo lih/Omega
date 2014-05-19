@@ -61,8 +61,7 @@ Compiling and running Omega
 Omega is written in C and assembly, so very little is actually needed
 to compile it. I use `gcc` and `nasm`, which work just fine. I use
 `cook` as my build tool, but it should be simple enough to write a
-Makefile with the same functionality (actually, `cook` can do that for
-you).
+Makefile with the same functionality.
 
 Once all the tools are installed, compiling Omega is dead simple, just
 run `cook` from the root of the source directory and grab the boot
@@ -109,3 +108,14 @@ following functionalities :
     the best productivity from Omega. A compiler to turn that language
     into reality.
   * Any other tool, game or program I might think of :-D
+
+Disclaimer
+==========
+
+Omega is not, and does not aim to be, a popular operating system, nor
+does it aim to reimplement all the functionality of existing systems
+(after all, "if two people agree on everything, one of them is
+unnecessary"). Instead, the goal of Omega is to provide a fun, simple
+and extensible environment in which to take advantage of the processing
+power available in today's hardware.
+

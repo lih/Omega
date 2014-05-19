@@ -82,12 +82,12 @@ Gear* pure(Torque* v) {
   ret->torque = v;
   return ret;
 }
-Gear* transmit(Gear* t) {
+Gear* mesh(Gear* t) {
   Gear* ret = newGear();
   ret->state = MESH;
   ret->initializer = evaluate;
-  mesh(ret,t);
-  ret->torque = cog(mesh(ret,pure(nil())));
+  link(ret,t);
+  ret->torque = cog(link(ret,pure(nil())));
   return ret;
 }
 
@@ -107,7 +107,7 @@ Torque* force(Gear* t) {
   }
   return t->torque;
 }
-Torque* reduce(Gear* g) {
+Torque* torque(Gear* g) {
   Torque* t = force(g);
   while(t->unit == COG) {
     Cog** c = (Cog**)AFTER(t);
@@ -136,7 +136,7 @@ void replace(Gear* old,Gear* new) {
   }
 }
 
-Cog* mesh(Gear* f,Gear* s) {
+Cog* link(Gear* f,Gear* s) {
   Cog* l = poolAlloc(&cogPool);
   l->down = s;
   l->up = f; 
@@ -147,7 +147,7 @@ Cog* mesh(Gear* f,Gear* s) {
 
   return l;
 }
-void unmesh(Cog* c) {
+void unlink(Cog* c) {
   DETACH(c,c);
   DETACH(c,p);
   debase(c->down,NEXTDEPTH(c->up->depth));
@@ -195,7 +195,7 @@ static void evaluate(Gear* t) {
   Gear* child = t->ring.cRight->down;
   Torque* val = force(child);
   Cog** c = AFTER(t->torque);
-  unmesh(*c);
+  unlink(*c);
   
   switch(val->unit) {
   case ARRAY: {
@@ -208,7 +208,7 @@ static void evaluate(Gear* t) {
     case FUNCTION: {
       Function* f = AFTER(ftVal);
 
-      *c = mesh(t,(*f)(arr));
+      *c = link(t,(*f)(arr));
       break;
     }
     default:
@@ -217,8 +217,74 @@ static void evaluate(Gear* t) {
     break;
   }
   default:
-    *c = mesh(t,child);
+    *c = link(t,child);
     break;
   }
 }
 
+static Gear* instance(Gear*);
+
+static void nodeInstance(MapNode* n,void* dict) {
+  Gear* m = dict;
+  replace(lookup(m,n->key),instance(n->cog->down));
+}
+static Gear* instance(Gear* g) {
+  switch(g->torque->unit) {
+  case ABSTRACT: {
+    Cog** c = AFTER(g->torque);
+    return (*c)->down;
+  }
+  case ARRAY: {
+    Array* oldA = AFTER(g->torque);
+    Torque *newT = newArray(sizeof(Torque) + sizeof(Array) + oldA->size*sizeof(Cog*)); {
+      newT->unit = ARRAY;
+    }
+    Array* newA = AFTER(newT); {
+      newA->size = oldA->size;
+    }
+
+    Gear* ret = pure(newT);
+    DOTIMES(i,newA->size)
+      newA->data[i] = link(ret,instance(oldA->data[i]->down));
+
+    return ret;
+  }
+  case DICTIONARY: {
+    Gear* ret = pure(dictionary());
+    forNodes(*(Map*)AFTER(g->torque),ret,nodeInstance);
+    return ret;
+  }
+  case STRING: {
+    String* str = AFTER(g->torque);
+    return pure(string(str->data));
+  }
+  default: {
+    Gear* ret = pure(g->torque);
+    Cog* child;
+    FORRING(child,ret->ring,c)
+      link(ret,child->down);
+    return ret;
+  }
+  }
+}
+Gear* instanciate(Array* args) {
+  Gear* f = args->data[0]->down;
+  Cog* env = f->ring.cRight;
+  Gear* tpl = env->down;
+  env = env->cRight;
+  Gear* vargs = env->down;
+
+  Array* va = AFTER(vargs->torque);
+  DOTIMES(i,va->size) {
+    Cog** c = AFTER(va->data[i]->down->torque);
+    (*c) = link(vargs,args->data[i+1]->down);
+  }
+  Gear* ret = instance(tpl);
+  DOTIMES(j,va->size) {
+    Cog** c = AFTER(va->data[j]->down->torque);
+    unlink(*c);
+    *c = NULL;
+  }
+
+  return ret;
+}

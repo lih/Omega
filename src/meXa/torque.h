@@ -4,7 +4,7 @@
 #include <util/memory.h>
 
 typedef enum {
-  NIL, NUMBER, STRING, ARRAY, DICTIONARY, FUNCTION, COG
+  NIL, NUMBER, STRING, ARRAY, DICTIONARY, FUNCTION, COG, ABSTRACT
 } Unit;
 typedef struct {
   Unit unit;
@@ -23,11 +23,13 @@ typedef struct Gear* (*Function)(Array* arr);
 
 Torque* number(int);
 Torque* string(char*);
-Torque* array(int n,...);
+Torque* array(int n,struct Gear* parent,struct Gear** children);
+Torque* arrayn(int n,struct Gear* parent,...);
 Torque* func(Function);
 Torque* nil();
 Torque* dictionary();
 Torque* cog(struct Cog*);
+Torque* abstract(struct Cog*);
 
 void freeTorque(Torque*);
 

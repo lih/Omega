@@ -39,6 +39,14 @@ Torque* cog(Cog* c) {
   *v = c;
   return ret;
 }
+Torque* abstract(Cog* c) {
+  Torque* ret = poolAlloc(&numPool);
+  ret->unit = ABSTRACT;
+
+  Cog** v = (Cog**)&ret->data;
+  *v = c;
+  return ret;
+}
 Torque* string(char* s) {
   int l = strlen(s);
   Torque* ret = newArray(sizeof(Torque) + sizeof(String) + l + 1);
@@ -50,18 +58,20 @@ Torque* string(char* s) {
    
   return ret;
 }
-Torque* array(int n,...) {
-  Cog** args = AFTER(&n);
-  Torque* ret = newArray(sizeof(Torque) + sizeof(Array) + n*sizeof(Gear*));
+Torque* array(int n,Gear* parent,Gear** children) {
+  Torque* ret = newArray(sizeof(Torque) + sizeof(Array) + n*sizeof(Cog*));
   ret->unit = ARRAY;
 
   Array* arr = AFTER(ret);
   int i;
   arr->size = n;
   for(i=0;i<n;i++)
-    arr->data[i] = args[i];
+    arr->data[i] = link(parent,children[i]);
 
   return ret;
+}
+Torque* arrayn(int n,Gear* parent,...) {
+  return array(n,parent,AFTER(&parent));
 }
 Torque* func(Function f) {
   Torque* ret = poolAlloc(&numPool);
@@ -112,6 +122,9 @@ void showTorque(Torque* v) {
     break;
   case COG:
     printf("COG");
+    break;
+  case ABSTRACT:
+    printf("ABSTRACT");
     break;
   case NIL:
     printf("NIL");

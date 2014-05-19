@@ -51,8 +51,8 @@ int identEq(PState* pstate) {
 
 Gear* array_at(Array* arr) {
   if(arr->size == 3) {
-    Torque* varr = reduce(arr->data[1]->down);
-    Torque* vn = reduce(arr->data[2]->down);
+    Torque* varr = torque(arr->data[1]->down);
+    Torque* vn = torque(arr->data[2]->down);
     if(varr->unit == ARRAY && vn->unit == NUMBER) {
       int* n = AFTER(vn);
       Array* arr = AFTER(varr);
@@ -71,7 +71,7 @@ Gear* array_at(Array* arr) {
 }
 Gear* builtin_if(Array* args) {
   if(args->size == 4) {
-    Torque* cond = reduce(args->data[1]->down);
+    Torque* cond = torque(args->data[1]->down);
     if(cond->unit == NIL)
       return args->data[3]->down;
     else
@@ -85,13 +85,13 @@ Gear* builtin_plus(Array* args) {
   int ret = 0;
   int i;
   for(i=1;i<args->size;i++) {
-    Torque* v = reduce(args->data[i]->down);
+    Torque* v = torque(args->data[i]->down);
     if(v->unit == NUMBER)
       ret += *(int*)AFTER(v);
   }
   return pure(number(ret));
 }
-#define VALUE_AT(a,i) reduce((a)->data[i]->down)
+#define VALUE_AT(a,i) torque((a)->data[i]->down)
 Gear* builtin_eq(Array* args) {
   if(args->size == 3) {
     Torque *a = VALUE_AT(args,1), *b = VALUE_AT(args,2);
@@ -125,7 +125,7 @@ void repl() {
     FREE;
     Gear* t = EXPR;
     if(t != NULL) {
-      Torque* v = reduce(t);
+      Torque* v = torque(t);
       printStr("= "); showTorque(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];

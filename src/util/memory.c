@@ -4,6 +4,7 @@
 
 page* page_head;
 int page_count;
+int alloc_count = 0;
 
 void* kAllocPage() {
   void* ret = NULL;
@@ -12,6 +13,8 @@ void* kAllocPage() {
     page_head = page_head->next;
   }
 
+  alloc_count++;
+
   return ret;
 }
 
@@ -19,6 +22,8 @@ void kFreePage(void* _p) {
   page* old = page_head;
   page_head = _p;
   page_head->next = old;
+
+  alloc_count--;
 }
 
 typedef struct {

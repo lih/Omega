@@ -16,7 +16,7 @@ typedef struct {
 #define ATOM atom(pstate)
 
 typedef enum {
-  REGULAR, OPAREN, CPAREN, SPACE, DIGIT, QUOTE, OPERATOR, END
+  REGULAR, OPAREN, APAREN, CPAREN, SPACE, DIGIT, QUOTE, OPERATOR, END
 } PACKED CharClass;
 extern CharClass classes[128];
 

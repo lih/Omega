@@ -19,5 +19,6 @@ Gear* lookup(Gear* map,char* key);
 void showMap(Map map);
 
 void define(char* key,Gear* val);
+void forNodes(Map m,void* data,void (*f)(MapNode*,void*));
 
 #endif

@@ -116,7 +116,8 @@ If you think of MeXa expressions as equations, that means that the
 system is enforcing the equations to be true no matter what gears you
 replace.
 
-The same result could have been achieved by writing 
+
+The same result could have been achieved by writing our equations in a different order :
 
     | z = x:+ y
     = 0
@@ -127,3 +128,4 @@ The same result could have been achieved by writing
     | z
     = 10
 
+    | square = { x:* x | x }

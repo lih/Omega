@@ -31,6 +31,8 @@ Torque* dictionary();
 Torque* cog(struct Cog*);
 Torque* abstract(struct Cog*);
 
+Torque* copyAtom(Torque*);
+
 void freeTorque(Torque*);
 
 void showTorque(Torque*);

@@ -57,8 +57,8 @@ void freeGear(Gear* t) {
        If none of our parents lead to the root, then we are the root of a cycle 
        or have no parents.
     */
-    printf("Freeing gear %x (depth: %x, pdepth: %x)\n",t,t->depth,parentDepth(t));
-
+    INFO("Freeing gear %x (depth: %x, pdepth: %x)\n",t,t->depth,parentDepth(t));
+    
     Cog *child;
     FORRING(child,t->ring,c) {
       DETACH(child,p);
@@ -101,7 +101,7 @@ Torque* force(Gear* t) {
     break;
   }
   case LOCKED:
-    printf("Locked block\n");
+    WARN("Locked block\n");
     while(1); /* We loop for now when encountering a locked gear. */
   default:
     break;
@@ -121,7 +121,7 @@ Torque* torque(Gear* g) {
 void replace(Gear* old,Gear* new) {
   if(old != new) {
     invalidate(old);
-    printf("Replacing %x by %x\n",old,new);
+    INFO("Replacing %x by %x\n",old,new);
 
     Cog* parent;
     Cog* next;
@@ -150,7 +150,7 @@ Cog* link(Gear* f,Gear* s) {
   return l;
 }
 void unlink(Cog* c) {
-  printf("Unlinking %x from %x\n",c->down,c->up);
+  CHATTER("Unlinking %x from %x\n",c->down,c->up);
 
   DETACH(c,c);
   DETACH(c,p);
@@ -177,7 +177,7 @@ static void invalidate(Gear* t) {
 }
 void rebase(Gear* t,int newdepth) {
   if(t->depth > newdepth) {
-    /* printf("Rebasing gear %x to depth %d (from %d)\n",t,newdepth,t->depth); */
+    CHATTER("Rebasing gear %x to depth %d (from %d)\n",t,newdepth,t->depth);
     Cog *child;
     t->depth = newdepth;
     FORRING(child,t->ring,c) 
@@ -188,7 +188,7 @@ void debase(Gear* t,int olddepth) {
   if(t->depth == olddepth) {
     Cog *child;
     t->depth = parentDepth(t);
-    /* printf("Debasing gear %x from depth %d (to %d)\n",t,olddepth,t->depth); */
+    CHATTER("Debasing gear %x from depth %d (to %d)\n",t,olddepth,t->depth);
     FORRING(child,t->ring,c) 
       debase(child->down,NEXTDEPTH(olddepth));
   }
@@ -236,8 +236,11 @@ static void nodeInstance(MapNode* n,void* dict) {
 static Gear* instance(Gear* g) {
   switch(g->torque->unit) {
   case ABSTRACT: {
-    Cog** c = AFTER(g->torque);
-    return (*c)->down;
+    do {
+      Cog** c = AFTER(g->torque);
+      g = (*c)->down;
+    } while(g->torque->unit == ABSTRACT);
+    return g;
   }
   case ARRAY: {
     Array* oldA = AFTER(g->torque);
@@ -259,22 +262,17 @@ static Gear* instance(Gear* g) {
     forNodes(*(Map*)AFTER(g->torque),ret,nodeInstance);
     return ret;
   }
-  case STRING: {
-    String* str = AFTER(g->torque);
-    return pure(string(str->data));
-  }
   case COG: {
     Gear* form = g->ring.cRight->down;
     return mesh(instance(form));
   }
-  default: {
-    Gear* ret = pure(g->torque);
-    Cog* child;
-    FORRING(child,g->ring,c)
-      link(ret,instance(child->down));
-    return ret;
+  case NIL:
+  case FUNCTION: 
+  case NUMBER:
+  case STRING:
+    return g;
   }
-  }
+  return NULL;
 }
 Gear* instanciate(Array* args) {
   Gear* f = args->data[0]->down;
@@ -290,7 +288,6 @@ Gear* instanciate(Array* args) {
   }
   Gear* ret = instance(tpl);
   rebase(ret,tpl->depth);
-  printf("Ret(%x,%x,%x): ",ret,tpl,vargs); showTorque(ret->torque); putChar('\n');
   DOTIMES(j,va->size) {
     Cog** c = AFTER(va->data[j]->down->torque);
     unlink(*c);

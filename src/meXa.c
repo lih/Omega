@@ -62,10 +62,10 @@ Gear* array_at(Array* arr) {
       String* s = AFTER(vn);
       return lookup(arr->data[1]->down,s->data);      
     }
-    else printf("Wrong argument types for array_at\n");
+    else WARN("Wrong argument types for array_at\n");
   }
   else
-    printf("Wrong number of arguments for function array_at\n");
+    WARN("Wrong number of arguments for function array_at\n");
   
   return pure(nil());
 }
@@ -78,7 +78,7 @@ Gear* builtin_if(Array* args) {
       return args->data[2]->down;
   }
   else
-    printf("Wrong number of arguments to 'if' function\n");
+    WARN("Wrong number of arguments to 'if' function\n");
   return pure(nil());
 }
 Gear* builtin_plus(Array* args) {
@@ -126,7 +126,6 @@ void repl() {
     Gear* t = EXPR;
     if(t != NULL) {
       Torque* v = torque(t);
-      printf("t=%x\n",t);
       printStr("= "); showTorque(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];
@@ -137,10 +136,10 @@ void repl() {
       else
 	freeGear(t);
       
-      /* printf("Defined '%s' at %x\n",var,t); */
+      INFO("Defined '%s' at %x\n",vstart,t);
     }
     else 
-      printf("Couldn't understand the expression '%s'\n",buf);
+      WARN("Couldn't understand the expression '%s'\n",buf);
 
     runCmd(buf);
 #undef pstate

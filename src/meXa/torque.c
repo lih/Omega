@@ -9,7 +9,7 @@ Pool numPool = { 0, sizeof(Torque) + sizeof(int) };
 Torque nilVal = { .unit = NIL };
 
 void freeTorque(Torque* v) {
-  printf("Freeing torque %x of shape %x\n",v,v->unit);
+  INFO("Freeing torque %x of shape %x\n",v,v->unit);
   switch(v->unit) {
   case NUMBER:
   case FUNCTION:
@@ -90,6 +90,13 @@ Torque* dictionary() {
   ret->unit = DICTIONARY;
   Map* m = AFTER(ret);
   *m = EMPTY;
+  return ret;
+}
+
+Torque* copyAtom(Torque* t) {
+  Torque* ret = poolAlloc(&numPool);
+  *ret = *t;
+  *(int*)AFTER(ret) = *(int*)AFTER(t);
   return ret;
 }
 

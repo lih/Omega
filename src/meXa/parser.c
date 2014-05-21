@@ -42,7 +42,7 @@ void abstractNode(MapNode* g,void* env) {
   Gear* repl = pure(nil());
   repl->torque = abstract(link(repl,ext));
   
-  printf("Replacing abstract node '%s'\n",g->key);
+  INFO("Replacing abstract node '%s'\n",g->key);
   replace(g->cog->down,repl);
 }
 Gear* atom(PState* pstate) {

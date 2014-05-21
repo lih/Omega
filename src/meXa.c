@@ -126,6 +126,7 @@ void repl() {
     Gear* t = EXPR;
     if(t != NULL) {
       Torque* v = torque(t);
+      printf("t=%x\n",t);
       printStr("= "); showTorque(v); putChar('\n');
       if(vsize > 0) {
 	char old = vstart[vsize];

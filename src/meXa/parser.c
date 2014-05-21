@@ -41,7 +41,8 @@ void abstractNode(MapNode* g,void* env) {
   Gear* ext = lookup(env,g->key);
   Gear* repl = pure(nil());
   repl->torque = abstract(link(repl,ext));
-
+  
+  printf("Replacing abstract node '%s'\n",g->key);
   replace(g->cog->down,repl);
 }
 Gear* atom(PState* pstate) {
@@ -90,6 +91,7 @@ Gear* atom(PState* pstate) {
     while((vars[nvars] = (FREE,IDENT))) nvars++;
     if(CUR == '|')
       expansion = (FORWARD,FREE,EXPR);
+    FREE; FORWARD;
     environment = oldEnv;
     
     args = pure(nil());
@@ -107,7 +109,7 @@ Gear* atom(PState* pstate) {
     ret = pure(func(instanciate));
     link(ret,expansion);
     link(ret,args);
-    freeGear(newEnv);
+    /* freeGear(newEnv); */
 
     return ret;
   }

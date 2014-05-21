@@ -9,11 +9,13 @@ Pool numPool = { 0, sizeof(Torque) + sizeof(int) };
 Torque nilVal = { .unit = NIL };
 
 void freeTorque(Torque* v) {
+  printf("Freeing torque %x of shape %x\n",v,v->unit);
   switch(v->unit) {
   case NUMBER:
   case FUNCTION:
   case DICTIONARY:
   case COG:
+  case ABSTRACT:
     poolFree(&numPool,v);
     break;
   case NIL:

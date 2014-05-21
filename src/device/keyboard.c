@@ -26,7 +26,7 @@ Layout qwerty = {
   [SC_S]={'s','S'},[SC_T]={'t','T'},[SC_U]={'u','U'},[SC_V]={'v','V'},[SC_W]={'w','W'},[SC_X]={'x','X'},
   [SC_Y]={'y','Y'},[SC_Z]={'z','Z'},
 
-  [SC_TAB]={'\t'}, [SC_BACKSPACE]={'\b'},
+  [SC_TAB]={'\t'}, [SC_BACKSPACE]={'\b','\b'},
 
   [SC_MINUS]={'-','_'}, 
   [SC_EQUAL]={'=','+'}, 

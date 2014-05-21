@@ -9,7 +9,6 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
 #define NEXTDEPTH(n) min(MAX_DEPTH,(n)+1)
-#define DEEPER(a,b) ((a) > (b) || (a) == MAX_DEPTH)
 
 static void nothing(Gear*);
 static void evaluate(Gear*);
@@ -52,12 +51,13 @@ Gear* newGear() {
   return ret;
 }
 void freeGear(Gear* t) {
-  if(DEEPER(t->depth,parentDepth(t))) {
+  int pdepth = parentDepth(t);
+  if(pdepth > t->depth || t->depth == MAX_DEPTH) {
     /* 
        If none of our parents lead to the root, then we are the root of a cycle 
        or have no parents.
     */
-    /* printf("Freeing gear %x (depth: %x, pdepth: %x)\n",t,t->depth,parentDepth(t)); */
+    printf("Freeing gear %x (depth: %x, pdepth: %x)\n",t,t->depth,parentDepth(t));
 
     Cog *child;
     FORRING(child,t->ring,c) {
@@ -73,6 +73,7 @@ void freeGear(Gear* t) {
     if(t->torque != NULL)
       freeTorque(t->torque);
     poolFree(&gearPool,t);
+
   }
 }
 
@@ -120,7 +121,8 @@ Torque* torque(Gear* g) {
 void replace(Gear* old,Gear* new) {
   if(old != new) {
     invalidate(old);
-  
+    printf("Replacing %x by %x\n",old,new);
+
     Cog* parent;
     Cog* next;
     for(parent = old->ring.pRight; parent != &old->ring;parent = next) {
@@ -148,6 +150,8 @@ Cog* link(Gear* f,Gear* s) {
   return l;
 }
 void unlink(Cog* c) {
+  printf("Unlinking %x from %x\n",c->down,c->up);
+
   DETACH(c,c);
   DETACH(c,p);
   debase(c->down,NEXTDEPTH(c->up->depth));
@@ -172,7 +176,7 @@ static void invalidate(Gear* t) {
     }
 }
 void rebase(Gear* t,int newdepth) {
-  if(!DEEPER(newdepth,t->depth)) {
+  if(t->depth > newdepth) {
     /* printf("Rebasing gear %x to depth %d (from %d)\n",t,newdepth,t->depth); */
     Cog *child;
     t->depth = newdepth;
@@ -180,13 +184,13 @@ void rebase(Gear* t,int newdepth) {
       rebase(child->down,NEXTDEPTH(newdepth));
   }
 }
-void debase(Gear* t,int depth) {
-  if(t->depth == depth) {
+void debase(Gear* t,int olddepth) {
+  if(t->depth == olddepth) {
     Cog *child;
     t->depth = parentDepth(t);
-    /* printf("Debasing gear %x from depth %d (to %d)\n",t,depth,t->depth); */
+    /* printf("Debasing gear %x from depth %d (to %d)\n",t,olddepth,t->depth); */
     FORRING(child,t->ring,c) 
-      debase(child->down,NEXTDEPTH(depth));
+      debase(child->down,NEXTDEPTH(olddepth));
   }
 }
 
@@ -202,7 +206,7 @@ static void evaluate(Gear* t) {
     Array* arr = AFTER(val);
 
     Gear* ft = arr->data[0]->down;
-    Torque* ftVal = force(ft);
+    Torque* ftVal = torque(ft);
 
     switch(ftVal->unit) {
     case FUNCTION: {
@@ -212,6 +216,7 @@ static void evaluate(Gear* t) {
       break;
     }
     default:
+      *c = link(t,pure(nil()));
       break;
     }
     break;
@@ -258,11 +263,15 @@ static Gear* instance(Gear* g) {
     String* str = AFTER(g->torque);
     return pure(string(str->data));
   }
+  case COG: {
+    Gear* form = g->ring.cRight->down;
+    return mesh(instance(form));
+  }
   default: {
     Gear* ret = pure(g->torque);
     Cog* child;
-    FORRING(child,ret->ring,c)
-      link(ret,child->down);
+    FORRING(child,g->ring,c)
+      link(ret,instance(child->down));
     return ret;
   }
   }
@@ -280,6 +289,8 @@ Gear* instanciate(Array* args) {
     (*c) = link(vargs,args->data[i+1]->down);
   }
   Gear* ret = instance(tpl);
+  rebase(ret,tpl->depth);
+  printf("Ret(%x,%x,%x): ",ret,tpl,vargs); showTorque(ret->torque); putChar('\n');
   DOTIMES(j,va->size) {
     Cog** c = AFTER(va->data[j]->down->torque);
     unlink(*c);

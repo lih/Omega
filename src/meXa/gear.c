@@ -236,11 +236,15 @@ static void nodeInstance(MapNode* n,void* dict) {
 static Gear* instance(Gear* g) {
   switch(g->torque->unit) {
   case ABSTRACT: {
-    do {
-      Cog** c = AFTER(g->torque);
-      g = (*c)->down;
-    } while(g->torque->unit == ABSTRACT);
-    return g;
+    Cog** sub = AFTER(g->torque);
+    Gear* subG = (*sub)->down;
+    if(subG->torque->unit == ABSTRACT) {
+      Gear* ret = pure(nil());
+      ret->torque = cog(link(ret,instance(subG)));
+      return ret;
+    }
+    else
+      return subG;
   }
   case ARRAY: {
     Array* oldA = AFTER(g->torque);
@@ -266,8 +270,10 @@ static Gear* instance(Gear* g) {
     Gear* form = g->ring.cRight->down;
     return mesh(instance(form));
   }
+  case FUNCTION: {
+    
+  }
   case NIL:
-  case FUNCTION: 
   case NUMBER:
   case STRING:
     return g;

@@ -237,14 +237,18 @@ static Gear* instance(Gear* g) {
   switch(g->torque->unit) {
   case ABSTRACT: {
     Cog** sub = AFTER(g->torque);
-    Gear* subG = (*sub)->down;
-    if(subG->torque->unit == ABSTRACT) {
-      Gear* ret = pure(nil());
-      ret->torque = cog(link(ret,instance(subG)));
-      return ret;
+    if(*sub != NULL) {
+      Gear* subG = (*sub)->down;
+      if(subG->torque->unit == ABSTRACT) {
+	Gear* ret = pure(nil());
+	ret->torque = abstract(link(ret,instance(subG)));
+	return ret;
+      }
+      else
+	return subG;
     }
     else
-      return subG;
+      return pure(abstract(NULL));
   }
   case ARRAY: {
     Array* oldA = AFTER(g->torque);

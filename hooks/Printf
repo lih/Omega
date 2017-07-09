@@ -1,4 +1,0 @@
-#!/bin/bash
-fmt="$1"
-shift
-printf "$fmt\n" "$@"

@@ -1,6 +1,0 @@
-#!/bin/bash
-obj="$1" ; shift ; src="$1"
-
-mkdir -p "$(dirname "$obj")"
-
-gcc -Werror -Wall -Wno-char-subscripts -fno-builtin -nostdlib -Os -m32 -c -I"$SRC" "$src" -o "$obj"

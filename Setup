@@ -1,0 +1,86 @@
+#!/usr/bin/setup
+# -*- mode: shell-script -*-
+declare BUILD=.build SRC=src
+declare -g OMEGA_PREFIX="$SETUP_PREFIX"
+
+declare -a sources=( $(find "$SRC" -name '*.c' -o -name '*.s') )
+declare -a objects=( "${sources[@]/#$SRC\//$BUILD/}" )
+objects=( "${objects[@]/%/.o}" )
+
+declare arg
+declare -a o_files=( )
+
+prepare "$BUILD/constants.S" = Omega.ASMConstants "$SRC/constants.h"
+prepare "$BUILD/ld.conf" = Omega.LD.conf "$SRC/constants.h"
+for arg in boot/kmain.S "${sources[@]#$SRC/}"; do
+    case "$arg" in
+	*.s|*.S) prepare "$BUILD/$arg.o" = Omega.ASM "$SRC/$arg" "$BUILD/constants.S" -felf32;;
+	*.c)     prepare "$BUILD/$arg.o" = Omega.CC "$SRC/$arg";;
+    esac
+    o_files+=( "$BUILD/$arg.o" )
+done
+prepare "$BUILD/kernel.bin" = Omega.LD "$BUILD/ld.conf" "${o_files[@]}"
+prepare "$BUILD/bootsector.bin" = Omega.ASM "$SRC/boot/bootsector.S" "$BUILD/constants.S"
+prepare "$BUILD/Omega.img" = Omega.IMG "$BUILD/"{bootsector,kernel}".bin"
+
+case "$1" in
+    package)
+	Setup.use Pkg
+	Pkg.package Pkg.files usr/share/omega/Omega.img=.build/Omega.img
+	;;
+esac
+
+function Omega.IMG() {
+    local out="$1" ; shift
+    local bootsect="$1" kernel="$2"
+
+    mkpdir "$out"
+
+    cat "$bootsect" "$kernel" /dev/zero 2> /dev/null \
+	| dd if='/dev/stdin' of="$out" bs=512 count=128 conv=notrunc 2> /dev/null
+}
+function Omega.ASMConstants() { mkpdir "$1"; sed -rn 's/^#define/%define/p' "$2" > "$1"; }
+function Omega.ASM() {
+    mkpdir "$1"
+    nasm -i "${OMEGA_PREFIX}.build/" -i "${OMEGA_PREFIX}src/" $4 "$2" -o "$1"
+}
+function Omega.CC() {
+    mkpdir "$1"
+    gcc -Werror -Wall -Wno-char-subscripts -fno-builtin -nostdlib -Os -m32 -c -I"${OMEGA_PREFIX}src" "$2" -o "$1"
+}
+
+function Omega.LD() {
+    local out="$1" ; shift
+    local script="$1"; shift
+
+    mkpdir "$out"
+
+    ld -T "$script" -m elf_i386 -o "$out"  "$@"
+}
+function Omega.LD.conf() {
+    local src="$2"
+    local entry="$(sed -rn 's/#define\s+KERNEL_START\s+//p' "$src")"
+
+    mkpdir "$1"
+    cat > "$1" <<EOF
+OUTPUT_FORMAT("binary")
+SECTIONS
+{
+  . = $entry;
+  .text : {
+    KERNEL_CODE = .;
+    *(.text)
+    *(.rodata)
+  }
+  .data ALIGN(8) : {
+    KERNEL_DATA = .;
+    *(.data)
+  }
+  .bss ALIGN(8) : {
+    KERNEL_BSS = .;
+    *(.bss)
+  }
+  KERNEL_END = .;
+}
+EOF
+}

@@ -1,5 +1,4 @@
 #!/usr/bin/setup
-# -*- mode: shell-script -*-
 declare BUILD=.build SRC=src
 declare -g OMEGA_PREFIX="$SETUP_PREFIX"
 
@@ -84,3 +83,8 @@ SECTIONS
 }
 EOF
 }
+
+# Local Variables:
+# mode: shell-script
+# sh-shell: bash
+# End:

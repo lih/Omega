@@ -22,12 +22,10 @@ prepare "$BUILD/kernel.bin" = Omega.LD "$BUILD/ld.conf" "${o_files[@]}"
 prepare "$BUILD/bootsector.bin" = Omega.ASM "$SRC/boot/bootsector.S" "$BUILD/constants.S"
 prepare "$BUILD/Omega.img" = Omega.IMG "$BUILD/"{bootsector,kernel}".bin"
 
-case "$1" in
-    package)
-	Setup.use Pkg
-	Pkg.package Pkg.files usr/share/omega/Omega.img=.build/Omega.img
-	;;
-esac
+if Setup.params -package; then
+    Setup.use Pkg
+    Pkg.package Pkg.files usr/share/omega/Omega.img=.build/Omega.img
+fi
 
 function Omega.IMG() {
     local out="$1" ; shift

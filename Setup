@@ -1,4 +1,4 @@
-#!/usr/bin/setup
+#!/usr/bin/setup -f
 declare BUILD=.build SRC=src
 declare -g OMEGA_PREFIX="$SETUP_PREFIX"
 
